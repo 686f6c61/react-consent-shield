@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [0.9.1] - 2025-12-01
+
+### Fixed
+- Demo dependency updated to use npm package instead of local file reference for Render deployment
+
 ## [0.9.0] - 2025-12-01
 
 ### Added
