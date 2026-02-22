@@ -295,8 +295,14 @@ export async function detectGeo(
   }
 
   // Headers method
-  if (method === 'headers' && options.headers) {
-    return detectFromHeaders(options.headers);
+  if (method === 'headers') {
+    if (options.headers) {
+      const headersResult = detectFromHeaders(options.headers);
+      if (headersResult) return headersResult;
+    }
+
+    // In browser-only deployments (no server headers available), fallback to API.
+    return detectFromApi(options.apiUrl);
   }
 
   // API method (default)

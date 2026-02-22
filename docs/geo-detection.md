@@ -26,16 +26,16 @@ The library checks for these headers:
 - `X-Vercel-IP-Country` and `X-Vercel-IP-Country-Region` (Vercel)
 - `X-Country-Code` and `X-Geo-Country` (generic)
 
-**GeoIP API** can be used when you set `geoDetection: 'api'`. The library calls an external API (ipwho.is by default) to determine the user's location based on their IP address.
+If CDN headers are unavailable (common in static browser deployments), the library falls back to **GeoIP API** automatically. The API call uses ipwho.is by default.
 
 You can configure which detection method to use:
 
 ```tsx
 <ConsentProvider
   config={{
-    geoDetection: 'headers',  // Only use CDN headers (recommended for privacy)
+    geoDetection: 'headers',  // Check CDN headers first, then API fallback if unavailable
     // or
-    geoDetection: 'api',      // Use GeoIP API explicitly
+    geoDetection: 'api',      // Use GeoIP API mode
   }}
 >
 ```

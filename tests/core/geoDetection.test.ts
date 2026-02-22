@@ -372,6 +372,25 @@ describe('geoDetection', () => {
       expect(result?.source).toBe('headers');
     });
 
+    it('should fallback to API when headers method has no geo headers', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          country_code: 'US',
+          region: 'California',
+          region_code: 'CA',
+        }),
+      } as Response);
+
+      const result = await detectGeo('headers', {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      expect(result?.country).toBe('US');
+      expect(result?.region).toBe('US-CA');
+      expect(result?.source).toBe('api');
+    });
+
     it('should use API method by default', async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,

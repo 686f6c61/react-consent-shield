@@ -31,7 +31,7 @@ Includes automatic geo-detection for 52 privacy laws worldwide (GDPR, CCPA, LGPD
 The library provides everything needed to implement cookie consent in a React application. Each feature is designed to work independently or together with others, so you can start simple and add complexity as needed.
 
 - **Real script blocking** - Actually blocks tracking scripts until consent is given
-- **Geographic detection** - Automatically applies the correct privacy law based on user location (`headers` by default)
+- **Geographic detection** - Automatically applies the correct privacy law based on user location (`headers` first, API fallback)
 - **274 service presets** - Google Analytics, Meta Pixel, Hotjar, TikTok, regional services (Yandex, Baidu, Naver...), and many more
 - **Google Consent Mode v2** - Full integration with automatic consent signal updates
 - **Cookie scanner** - Detects undeclared cookies for compliance auditing
