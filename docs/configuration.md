@@ -70,7 +70,7 @@ Here's an example with more options:
 | forceRegion | string | - | Force a specific region code (bypasses geo-detection) |
 | forceLaw | string | - | Force a specific law (bypasses geo-detection) |
 | geoDetection | string | 'headers' | Detection method: 'headers', 'api', 'manual' |
-| geoFallback | string | 'none' | Fallback when detection fails: 'none', 'strictest', 'permissive', 'region', 'showWarning' |
+| geoFallback | string | 'strictest' | Fallback when detection fails: 'none', 'strictest', 'permissive', 'region', 'showWarning' |
 | geoFallbackRegion | string | - | Region code when using 'region' fallback strategy |
 | blockScroll | boolean | false | Block page scrolling when banner is visible |
 | enableLogs | boolean | true | Enable audit logging |

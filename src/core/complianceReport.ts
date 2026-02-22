@@ -21,7 +21,7 @@ import type {
   LawConfig,
   CategoryConfig,
 } from '../types';
-import { VERSION, LAW_CONFIGS, DEFAULT_CATEGORIES } from '../constants';
+import { VERSION, LAW_CONFIGS, DEFAULT_CATEGORIES, DEFAULT_CONFIG } from '../constants';
 import { getLawConfig } from './lawDeterminer';
 import { generateHash } from './consentLogger';
 
@@ -198,7 +198,7 @@ export function generateComplianceReport(
   // Build geo detection section
   const geoDetection: ComplianceReportGeoDetection = {
     method: config.geoDetection || 'headers',
-    fallbackStrategy: config.geoFallback || 'none',
+    fallbackStrategy: config.geoFallback || DEFAULT_CONFIG.geoFallback,
     fallbackRegion: config.geoFallbackRegion || null,
     forceRegion: config.forceRegion || null,
     forceLaw: config.forceLaw || null,

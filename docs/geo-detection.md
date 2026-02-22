@@ -48,7 +48,7 @@ Sometimes geo-detection fails. The API might be blocked, the user might have a V
 
 | Strategy | Description |
 |----------|-------------|
-| `none` | Do nothing, leave the region as unknown (default) |
+| `none` | Do nothing, leave the region as unknown |
 | `strictest` | Apply GDPR requirements (the most restrictive law) |
 | `permissive` | Apply no specific law requirements |
 | `region` | Use a specific fallback region that you define |
@@ -337,7 +337,7 @@ function MyComponent() {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `geoDetection` | `'headers'` \| `'api'` | `'headers'` | Detection method |
-| `geoFallback` | `'none'` \| `'strictest'` \| `'permissive'` \| `'region'` \| `'showWarning'` | `'none'` | Fallback strategy |
+| `geoFallback` | `'none'` \| `'strictest'` \| `'permissive'` \| `'region'` \| `'showWarning'` | `'strictest'` | Fallback strategy |
 | `geoFallbackRegion` | `string` | - | Region code for 'region' fallback |
 | `forceRegion` | `string` | - | Force a specific region |
 | `forceLaw` | `LawType` | - | Force a specific law |

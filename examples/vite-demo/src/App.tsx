@@ -1937,7 +1937,7 @@ function App() {
   const [bannerVariant, setBannerVariant] = useState<BannerVariant>('default');
   const [popupThemePreset, setPopupThemePreset] = useState<PopupThemePresetId | ''>('');
   const [blockInteraction, setBlockInteraction] = useState(true);
-  const [geoFallback, setGeoFallback] = useState<GeoFallbackStrategy>('none');
+  const [geoFallback, setGeoFallback] = useState<GeoFallbackStrategy>('strictest');
   const [localeDetection, setLocaleDetection] = useState<LocaleDetection>('auto');
   const [allowServiceSelection, setAllowServiceSelection] = useState(false);
   const [key, setKey] = useState(0);

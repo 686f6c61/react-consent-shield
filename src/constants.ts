@@ -787,6 +787,7 @@ export const RECONSENT_POLICIES: Record<ReconsentPolicy, { days: number; onPolic
 export const DEFAULT_CONFIG = {
   defaultLocale: 'en',
   geoDetection: 'headers' as const,
+  geoFallback: 'strictest' as const,
   storageType: 'both' as const,
   cookieName: 'consent_preferences',
   cookieExpiry: 365,
