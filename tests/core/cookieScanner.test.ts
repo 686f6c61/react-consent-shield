@@ -276,6 +276,55 @@ describe('cookieScanner', () => {
       expect(report).toContain('Informe de Escaneo');
       expect(report).toContain('CUMPLE');
     });
+
+    it('should render issue sections in Spanish for known and unknown cookies', () => {
+      const result = {
+        timestamp: new Date('2025-01-01T12:00:00Z'),
+        totalFound: 2,
+        declared: [],
+        knownNotDeclared: [
+          {
+            name: '_hjid',
+            classification: 'known' as const,
+            matchedPreset: mockHotjar,
+            matchedPattern: '_hjid',
+            category: 'analytics' as const,
+            suggestion: 'Anadir hotjar',
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        unknown: [
+          {
+            name: 'tracker_xyz',
+            classification: 'unknown' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: 'Investigar',
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        summary: {
+          compliant: false,
+          issues: 2,
+          suggestions: ['Anadir hotjar', 'Investigar'],
+          declaredCount: 0,
+          knownNotDeclaredCount: 1,
+          unknownCount: 1,
+        },
+      };
+
+      const report = formatScanReport(result, 'es');
+      expect(report).toContain('PROBLEMAS ENCONTRADOS');
+      expect(report).toContain('Conocidas pero no declaradas');
+      expect(report).toContain('Cookies desconocidas');
+      expect(report).toContain('Anadir hotjar');
+      expect(report).toContain('Investigar origen');
+    });
   });
 
   describe('exportScanResultJSON', () => {
@@ -298,6 +347,54 @@ describe('cookieScanner', () => {
       expect(parsed.totalFound).toBe(1);
       expect(parsed.declared[0].name).toBe('_ga');
       expect(parsed.declared[0].service).toBe('google-analytics');
+    });
+
+    it('should include known and unknown sections in exported JSON', () => {
+      const result = {
+        timestamp: new Date('2025-01-01T12:00:00Z'),
+        totalFound: 2,
+        declared: [],
+        knownNotDeclared: [
+          {
+            name: '_fbp',
+            classification: 'known' as const,
+            matchedPreset: mockMetaPixel,
+            matchedPattern: '_fbp',
+            category: 'marketing' as const,
+            suggestion: 'Add meta-pixel',
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        unknown: [
+          {
+            name: 'mystery_cookie',
+            classification: 'unknown' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: 'Investigate',
+            value: '',
+            size: 99,
+            foundAt: new Date(),
+          },
+        ],
+        summary: {
+          compliant: false,
+          issues: 2,
+          suggestions: [],
+          declaredCount: 0,
+          knownNotDeclaredCount: 1,
+          unknownCount: 1,
+        },
+      };
+
+      const parsed = JSON.parse(exportScanResultJSON(result));
+      expect(parsed.knownNotDeclared[0].service).toBe('meta-pixel');
+      expect(parsed.knownNotDeclared[0].suggestion).toBe('Add meta-pixel');
+      expect(parsed.unknown[0].name).toBe('mystery_cookie');
+      expect(parsed.unknown[0].size).toBe(99);
     });
   });
 
@@ -325,6 +422,79 @@ describe('cookieScanner', () => {
       expect(lines.some(l => l.includes('_ga'))).toBe(true);
       expect(lines.some(l => l.includes('declared'))).toBe(true);
       expect(lines.some(l => l.includes('known_not_declared'))).toBe(true);
+    });
+
+    it('should include unknown rows and blank fallbacks in CSV', () => {
+      const result = {
+        timestamp: new Date('2025-01-01T12:00:00Z'),
+        totalFound: 3,
+        declared: [
+          {
+            name: '_ga',
+            classification: 'declared' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: null,
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        knownNotDeclared: [
+          {
+            name: '_fbp',
+            classification: 'known' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: null,
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        unknown: [
+          {
+            name: 'mystery_cookie',
+            classification: 'unknown' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: 'Investigate',
+            value: '',
+            size: 42,
+            foundAt: new Date(),
+          },
+          {
+            name: 'mystery_cookie_2',
+            classification: 'unknown' as const,
+            matchedPreset: null,
+            matchedPattern: null,
+            category: null,
+            suggestion: null,
+            value: '',
+            size: 10,
+            foundAt: new Date(),
+          },
+        ],
+        summary: {
+          compliant: false,
+          issues: 2,
+          suggestions: [],
+          declaredCount: 1,
+          knownNotDeclaredCount: 1,
+          unknownCount: 1,
+        },
+      };
+
+      const csv = exportScanResultCSV(result);
+      const lines = csv.split('\n');
+
+      expect(lines.some(l => l.includes('unknown'))).toBe(true);
+      expect(lines.some(l => l.includes('"mystery_cookie"'))).toBe(true);
+      expect(lines.some(l => l.includes('"Investigate"'))).toBe(true);
+      expect(lines.some(l => l.includes('"mystery_cookie_2",unknown,,,,,""'))).toBe(true);
     });
   });
 
@@ -401,6 +571,15 @@ describe('cookieScanner', () => {
 
       const result = parseBrowserCookies();
       expect(result.length).toBe(1); // Only _ga, others are ignored
+      expect(result[0].name).toBe('_ga');
+    });
+
+    it('should ignore cookies case-insensitively via lowercase lookup', () => {
+      // @ts-ignore
+      global.document = { cookie: '_ga=test; SESSION=abc123' };
+
+      const result = parseBrowserCookies();
+      expect(result.length).toBe(1);
       expect(result[0].name).toBe('_ga');
     });
   });

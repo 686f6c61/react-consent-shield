@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -85,7 +85,7 @@ Before diving into more advanced features, it helps to understand the core conce
 
 **Services** are the actual tracking tools you use on your website, like Google Analytics or Hotjar. Each service belongs to a category. When a user accepts a category, all services in that category are allowed.
 
-**Service presets** are pre-configured definitions for popular services. Each preset includes the service name, its category, the domains it uses, and the cookies it sets. The library includes 41 presets for the most common analytics and marketing tools.
+**Service presets** are pre-configured definitions for popular services. Each preset includes the service name, its category, the domains it uses, and the cookies it sets. The library includes 274 presets covering analytics, marketing, enterprise, and regional services.
 
 When you configure the library with a list of services, it knows exactly which cookies those services use. This information is used to:
 

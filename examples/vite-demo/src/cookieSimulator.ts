@@ -1,6 +1,6 @@
 /**
  * react-consent-shield - Cookie Simulator for Demos
- * @version 0.9.0
+ * @version 0.9.2
  * @author 686f6c61
  * @license MIT
  *

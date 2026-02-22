@@ -543,7 +543,7 @@ function parseAkamaiEdgescape(value: string): { country: string | null; region: 
  */
 export function detectFromCDNHeaders(headers: Headers | Record<string, string>): CDNDetectionResult {
   const provider = detectCDNProvider(headers);
-  const headerConfig = CDN_HEADERS[provider] || CDN_HEADERS['unknown'];
+  const headerConfig = CDN_HEADERS[provider];
 
   const getHeader = (name: string): string | null => {
     if (headers instanceof Headers) {

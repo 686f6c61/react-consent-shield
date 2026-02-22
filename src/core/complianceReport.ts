@@ -197,7 +197,7 @@ export function generateComplianceReport(
 
   // Build geo detection section
   const geoDetection: ComplianceReportGeoDetection = {
-    method: config.geoDetection || 'api',
+    method: config.geoDetection || 'headers',
     fallbackStrategy: config.geoFallback || 'none',
     fallbackRegion: config.geoFallbackRegion || null,
     forceRegion: config.forceRegion || null,

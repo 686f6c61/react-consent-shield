@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Security audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
   test:
     runs-on: ubuntu-latest

@@ -9,16 +9,20 @@
  * Tests for generating and exporting compliance reports.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   generateComplianceReport,
   exportReportAsJSON,
   exportReportAsHTML,
+  downloadReport,
+  downloadReportAsJSON,
+  downloadReportAsHTML,
   type ComplianceReport,
   type ComplianceReportOptions,
 } from '../src/core/complianceReport';
 import type { ConsentConfig, ConsentState, CookieScanResult } from '../src/types';
 import { DEFAULT_CATEGORIES } from '../src/constants';
+import { generateHash } from '../src/core/consentLogger';
 
 // Mock config for tests
 const mockConfig: ConsentConfig = {
@@ -113,7 +117,7 @@ describe('complianceReport', () => {
     it('should include geo detection configuration', () => {
       const report = generateComplianceReport(mockConfig, mockState);
 
-      expect(report.geoDetection.method).toBe('api');
+      expect(report.geoDetection.method).toBe('headers');
       expect(report.geoDetection.fallbackStrategy).toBeDefined();
     });
 
@@ -331,6 +335,70 @@ describe('complianceReport', () => {
       // Hashes should be strings of reasonable length
       expect(report1.reportHash.length).toBeGreaterThan(5);
     });
+
+    it('should fallback category name to id when english label is missing', () => {
+      const config: ConsentConfig = {
+        ...mockConfig,
+        categories: [
+          {
+            id: 'analytics',
+            name: { es: 'Analitica' },
+            description: { es: 'Descripcion' },
+            required: false,
+            defaultEnabled: false,
+          } as any,
+        ],
+      };
+
+      const report = generateComplianceReport(config, mockState);
+      expect(report.categories[0].name).toBe('analytics');
+    });
+
+    it('should resolve law names with uppercase fallback for unmapped laws', () => {
+      const customLawState: ConsentState = {
+        ...mockState,
+        law: 'us-virginia',
+      } as ConsentState;
+
+      const report = generateComplianceReport(mockConfig, customLawState);
+      expect(report.lawConfiguration.lawName).toBe('US-VIRGINIA');
+    });
+
+    it('should include current hostname when siteDomain option is not provided', () => {
+      const report = generateComplianceReport(mockConfig, mockState);
+      expect(report.metadata.siteDomain).toBe(window.location.hostname);
+    });
+
+    it('should fallback metadata siteDomain to null on server', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../src/core/complianceReport');
+      const report = module.generateComplianceReport(mockConfig, mockState);
+      expect(report.metadata.siteDomain).toBeNull();
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
+    });
+
+    it('should include required service metadata and null reason fallback', () => {
+      const config: ConsentConfig = {
+        ...mockConfig,
+        requiredServices: [
+          {
+            serviceId: 'google-analytics',
+            reason: { es: 'Necesario para metricas' },
+          },
+        ],
+      } as ConsentConfig;
+
+      const report = generateComplianceReport(config, mockState);
+      const service = report.services.find((s) => s.id === 'google-analytics');
+
+      expect(service?.isRequired).toBe(true);
+      expect(service?.requiredReason).toBeNull();
+    });
   });
 
   describe('exportReportAsJSON', () => {
@@ -483,6 +551,201 @@ describe('complianceReport', () => {
       expect(html).toContain('10');
     });
 
+    it('should render no-services message and unknown site fallback', () => {
+      const report = generateComplianceReport(
+        { ...mockConfig, services: [] },
+        mockState,
+        { siteDomain: '' }
+      );
+      report.metadata.siteDomain = null;
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('No services configured');
+      expect(html).toContain('Unknown Site');
+      expect(html).toContain('Not specified');
+    });
+
+    it('should render cookie scan issues list when present', () => {
+      const report = generateComplianceReport(mockConfig, mockState, {
+        includeCookieScan: true,
+        cookieScanResult: {
+          timestamp: new Date(),
+          totalFound: 2,
+          declared: [],
+          knownNotDeclared: [],
+          unknown: [{ name: 'mystery', value: '1' }],
+          suggestions: ['Investigate mystery cookie'],
+        },
+      });
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('Issues:');
+      expect(html).toContain('Investigate mystery cookie');
+    });
+
+    it('should render age verification details with method fallback', () => {
+      const report = generateComplianceReport(
+        {
+          ...mockConfig,
+          ageVerification: {
+            enabled: true,
+            minimumAge: 18,
+            blockUnderage: true,
+            parentalConsentRequired: true,
+          },
+        },
+        mockState
+      );
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('Minimum Age:');
+      expect(html).toContain('Not specified');
+      expect(html).toContain('Parental Consent Required');
+    });
+
+    it('should truncate long domain/cookie lists and include required reason', () => {
+      const report = generateComplianceReport(
+        {
+          ...mockConfig,
+          services: [
+            {
+              id: 'heavy-service',
+              name: 'Heavy Service',
+              category: 'analytics',
+              domains: ['a.com', 'b.com', 'c.com', 'd.com'],
+              cookies: ['c1', 'c2', 'c3', 'c4'],
+            },
+          ],
+          requiredServices: [
+            {
+              serviceId: 'heavy-service',
+              reason: { en: 'Security critical' },
+            },
+          ],
+        } as ConsentConfig,
+        mockState
+      );
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('a.com, b.com, c.com');
+      expect(html).toContain('...');
+      expect(html).toContain('Security critical');
+    });
+
+    it('should show required services without reason and retention fallback', () => {
+      const report = generateComplianceReport(
+        {
+          ...mockConfig,
+          categories: [
+            {
+              id: 'analytics',
+              name: { en: 'Analytics' },
+              description: { en: 'desc' },
+              required: false,
+              defaultEnabled: false,
+            },
+          ],
+          services: [
+            {
+              id: 'required-no-reason',
+              name: 'Required No Reason',
+              category: 'analytics',
+              domains: ['one.example'],
+              cookies: ['_one'],
+            },
+          ],
+          requiredServices: [
+            {
+              serviceId: 'required-no-reason',
+              reason: { es: 'Solo en espanol' },
+            },
+          ],
+        } as ConsentConfig,
+        mockState
+      );
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('Not specified');
+      expect(html).toContain('<span class="required">Yes</span>');
+    });
+
+    it('should render retention days when category retention is configured', () => {
+      const report = generateComplianceReport(
+        {
+          ...mockConfig,
+          categories: [
+            {
+              id: 'analytics',
+              name: { en: 'Analytics' },
+              description: { en: 'desc' },
+              required: false,
+              defaultEnabled: false,
+              retentionDays: 30,
+            },
+          ],
+        } as ConsentConfig,
+        mockState
+      );
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('30 days');
+    });
+
+    it('should hide age details when age verification is disabled', () => {
+      const report = generateComplianceReport(
+        {
+          ...mockConfig,
+          ageVerification: { enabled: false },
+        },
+        mockState
+      );
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('Age Verification');
+      expect(html).not.toContain('Minimum Age:');
+    });
+
+    it('should render audit validity states', () => {
+      const validEntry = {
+        timestamp: new Date().toISOString(),
+        action: 'consent_given',
+        categories: {
+          necessary: true,
+          analytics: false,
+          marketing: true,
+          functional: false,
+          personalization: false,
+        },
+        sessionId: 'session-1',
+        userAgent: 'Mozilla/5.0',
+        policyVersion: '1.0',
+      };
+
+      const validHash = generateHash(
+        JSON.stringify({
+          timestamp: validEntry.timestamp,
+          action: validEntry.action,
+          categories: validEntry.categories,
+          policyVersion: validEntry.policyVersion,
+          sessionId: validEntry.sessionId,
+        })
+      );
+
+      const report = generateComplianceReport(mockConfig, mockState, {
+        includeAuditLog: true,
+        auditLogEntries: [
+          { ...validEntry, hash: validHash },
+          { ...validEntry, hash: 'invalid-hash', action: 'update' },
+        ],
+      });
+
+      const html = exportReportAsHTML(report);
+      expect(html).toContain('hash-valid');
+      expect(html).toContain('hash-invalid');
+      expect(html).toContain('Yes');
+      expect(html).toContain('No');
+    });
+
     it('should have proper CSS styling', () => {
       const report = generateComplianceReport(mockConfig, mockState);
       const html = exportReportAsHTML(report);
@@ -504,6 +767,88 @@ describe('complianceReport', () => {
       const html = exportReportAsHTML(report);
 
       expect(html).toContain('not legal advice');
+    });
+  });
+
+  describe('download helpers', () => {
+    it('should download arbitrary report content', () => {
+      const originalCreateObjectURL = (URL as any).createObjectURL;
+      const originalRevokeObjectURL = (URL as any).revokeObjectURL;
+      const createObjectURLSpy = vi.fn(() => 'blob:test');
+      const revokeObjectURLSpy = vi.fn();
+      (URL as any).createObjectURL = createObjectURLSpy;
+      (URL as any).revokeObjectURL = revokeObjectURLSpy;
+      const clickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => {});
+
+      downloadReport('hello', 'report.txt', 'text/plain');
+
+      expect(createObjectURLSpy).toHaveBeenCalled();
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:test');
+
+      if (originalCreateObjectURL) {
+        (URL as any).createObjectURL = originalCreateObjectURL;
+      } else {
+        delete (URL as any).createObjectURL;
+      }
+      if (originalRevokeObjectURL) {
+        (URL as any).revokeObjectURL = originalRevokeObjectURL;
+      } else {
+        delete (URL as any).revokeObjectURL;
+      }
+      clickSpy.mockRestore();
+    });
+
+    it('should download JSON and HTML report formats', () => {
+      const report = generateComplianceReport(mockConfig, mockState);
+      let lastBlobType = '';
+      const originalCreateObjectURL = (URL as any).createObjectURL;
+      const originalRevokeObjectURL = (URL as any).revokeObjectURL;
+      const createObjectURLSpy = vi.fn((blob: Blob | MediaSource) => {
+        if (blob instanceof Blob) {
+          lastBlobType = blob.type;
+        }
+        return 'blob:test';
+      });
+      const revokeObjectURLSpy = vi.fn();
+      (URL as any).createObjectURL = createObjectURLSpy;
+      (URL as any).revokeObjectURL = revokeObjectURLSpy;
+      const clickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => {});
+
+      downloadReportAsJSON(report);
+      expect(lastBlobType).toBe('application/json');
+
+      downloadReportAsHTML(report);
+      expect(lastBlobType).toBe('text/html');
+      expect(clickSpy).toHaveBeenCalledTimes(2);
+
+      if (originalCreateObjectURL) {
+        (URL as any).createObjectURL = originalCreateObjectURL;
+      } else {
+        delete (URL as any).createObjectURL;
+      }
+      if (originalRevokeObjectURL) {
+        (URL as any).revokeObjectURL = originalRevokeObjectURL;
+      } else {
+        delete (URL as any).revokeObjectURL;
+      }
+      clickSpy.mockRestore();
+    });
+
+    it('should no-op download on server environments', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../src/core/complianceReport');
+      expect(() => module.downloadReport('x', 'x.txt', 'text/plain')).not.toThrow();
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
     });
   });
 

@@ -439,6 +439,13 @@ export function ConsentProvider({ children, config = {} }: ConsentProviderProps)
     }
   }, [isLoading, state.hasConsented, mergedConfig.respectDoNotTrack, mergedConfig.respectGlobalPrivacyControl, mergedConfig.policyVersion, mergedConfig.debug, detectedRegion, appliedLaw, storage, logger]);
 
+  // Ensure pre-blocked scripts (e.g. type="text/plain" in HTML) are unblocked
+  // for returning users with stored consent after initial hydration.
+  useEffect(() => {
+    if (isLoading || !state.hasConsented) return;
+    unblockBasedOnConsent(state, mergedConfig.onScriptLoaded);
+  }, [isLoading, state.hasConsented, state.categories, mergedConfig.onScriptLoaded]);
+
   // Update state and trigger side effects
   const updateState = useCallback((newState: ConsentState, action: ConsentLogEntry['action']) => {
     setState(newState);

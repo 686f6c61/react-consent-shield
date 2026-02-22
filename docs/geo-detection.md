@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -26,7 +26,7 @@ The library checks for these headers:
 - `X-Vercel-IP-Country` and `X-Vercel-IP-Country-Region` (Vercel)
 - `X-Country-Code` and `X-Geo-Country` (generic)
 
-**GeoIP API** is used as a fallback when headers aren't available. The library calls an external API (ipwho.is by default) to determine the user's location based on their IP address.
+**GeoIP API** can be used when you set `geoDetection: 'api'`. The library calls an external API (ipwho.is by default) to determine the user's location based on their IP address.
 
 You can configure which detection method to use:
 
@@ -35,7 +35,7 @@ You can configure which detection method to use:
   config={{
     geoDetection: 'headers',  // Only use CDN headers (recommended for privacy)
     // or
-    geoDetection: 'api',      // Use GeoIP API (default)
+    geoDetection: 'api',      // Use GeoIP API explicitly
   }}
 >
 ```
@@ -336,7 +336,7 @@ function MyComponent() {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `geoDetection` | `'headers'` \| `'api'` | `'api'` | Detection method |
+| `geoDetection` | `'headers'` \| `'api'` | `'headers'` | Detection method |
 | `geoFallback` | `'none'` \| `'strictest'` \| `'permissive'` \| `'region'` \| `'showWarning'` | `'none'` | Fallback strategy |
 | `geoFallbackRegion` | `string` | - | Region code for 'region' fallback |
 | `forceRegion` | `string` | - | Force a specific region |

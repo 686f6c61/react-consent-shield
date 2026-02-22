@@ -59,6 +59,8 @@ export function unblockScript(script: HTMLScriptElement): Promise<void> {
 
     // Create new script element
     const newScript = document.createElement('script');
+    const category = script.getAttribute(CONSENT_CATEGORY_ATTR);
+    const serviceId = script.getAttribute('data-service-id');
 
     // Copy attributes except type and data-consent-*
     for (const attr of script.attributes) {
@@ -72,6 +74,15 @@ export function unblockScript(script: HTMLScriptElement): Promise<void> {
 
     // Set the actual src
     const src = script.getAttribute(CONSENT_SRC_ATTR);
+
+    // Preserve consent metadata so loaded scripts can be queried/removed by category
+    if (category) {
+      newScript.setAttribute(CONSENT_CATEGORY_ATTR, category);
+    }
+    if (serviceId) {
+      newScript.setAttribute('data-service-id', serviceId);
+    }
+
     if (src) {
       newScript.src = src;
     } else {
@@ -85,7 +96,7 @@ export function unblockScript(script: HTMLScriptElement): Promise<void> {
     // Handle load/error events for external scripts
     if (src) {
       newScript.onload = () => {
-        script.setAttribute(CONSENT_LOADED_ATTR, 'true');
+        newScript.setAttribute(CONSENT_LOADED_ATTR, 'true');
         resolve();
       };
       newScript.onerror = () => {
@@ -103,7 +114,7 @@ export function unblockScript(script: HTMLScriptElement): Promise<void> {
 
     // For inline scripts, mark as loaded immediately
     if (!src) {
-      script.setAttribute(CONSENT_LOADED_ATTR, 'true');
+      newScript.setAttribute(CONSENT_LOADED_ATTR, 'true');
       resolve();
     }
   });

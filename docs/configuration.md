@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -29,7 +29,7 @@ import { googleAnalytics, metaPixel, hotjar } from 'react-consent-shield';
 
 **position** controls where the banner appears on the screen. Options are `'top'`, `'bottom'`, `'bottom-left'`, `'bottom-right'`, and `'center'`. The default is `'bottom'`.
 
-**theme** sets the color scheme. Options are `'light'`, `'dark'`, and `'auto'`. When set to `'auto'`, the library respects the user's system preference for dark or light mode.
+**theme** sets the color scheme. Options are `'light'`, `'dark'`, `'auto'`, and `'high-contrast'`. When set to `'auto'`, the library respects the user's system preference for dark or light mode.
 
 **defaultLocale** sets the language for the UI. The library includes translations for 10 languages: English (`'en'`), Spanish (`'es'`), German (`'de'`), French (`'fr'`), Portuguese (`'pt'`), Italian (`'it'`), Dutch (`'nl'`), Polish (`'pl'`), Japanese (`'ja'`), and Chinese (`'zh'`).
 
@@ -58,22 +58,22 @@ Here's an example with more options:
 |--------|------|---------|-------------|
 | services | ServicePreset[] | [] | List of tracking services to manage |
 | position | string | 'bottom' | Banner position: 'top', 'bottom', 'bottom-left', 'bottom-right', 'center' |
-| theme | string | 'auto' | Color theme: 'light', 'dark', 'auto' |
+| theme | string | 'auto' | Color theme: 'light', 'dark', 'auto', 'high-contrast' |
 | defaultLocale | string | 'en' | Default language for UI text |
 | localeDetection | string | 'manual' | How to detect locale: 'auto', 'geo', 'browser', 'manual' |
 | translations | object | - | Custom translations to merge with defaults |
-| cookieName | string | 'consent' | Name of the cookie storing consent data |
+| cookieName | string | 'consent_preferences' | Name of the cookie storing consent data |
 | cookieDomain | string | current domain | Domain for the consent cookie |
 | cookieExpiry | number | 365 | Cookie expiry in days |
-| storageType | string | 'both' | Where to store consent: 'cookie', 'localStorage', 'both' |
+| storageType | string | 'both' | Where to store consent: 'cookie', 'localStorage', 'sessionStorage', 'both' |
 | policyVersion | string | '1.0' | Your privacy policy version |
 | forceRegion | string | - | Force a specific region code (bypasses geo-detection) |
 | forceLaw | string | - | Force a specific law (bypasses geo-detection) |
-| geoDetection | string | 'api' | Detection method: 'headers', 'api', 'manual' |
+| geoDetection | string | 'headers' | Detection method: 'headers', 'api', 'manual' |
 | geoFallback | string | 'none' | Fallback when detection fails: 'none', 'strictest', 'permissive', 'region', 'showWarning' |
 | geoFallbackRegion | string | - | Region code when using 'region' fallback strategy |
 | blockScroll | boolean | false | Block page scrolling when banner is visible |
-| enableLogs | boolean | false | Enable audit logging |
+| enableLogs | boolean | true | Enable audit logging |
 | maxLogEntries | number | 50 | Maximum log entries to store locally |
 | logCallback | function | - | Callback called for each consent action |
 | debug | boolean | false | Enable console debug logging |
@@ -93,6 +93,38 @@ Here's an example with more options:
 | previewMode | boolean | false | Enable preview mode (consent not persisted) |
 | previewVariant | string | - | Banner variant to use in preview mode |
 | ageVerification | object | - | Age verification configuration (see below) |
+
+## Popup Theme Presets
+
+For faster implementation, the package includes 3 ready-to-use popup presets:
+
+- `corporate`
+- `minimal`
+- `high-contrast`
+
+```tsx
+import {
+  ConsentProvider,
+  ConsentBanner,
+  ConsentModal,
+  getPopupThemePreset,
+  googleAnalytics,
+} from 'react-consent-shield';
+
+const uiPreset = getPopupThemePreset('corporate');
+
+<ConsentProvider
+  config={{
+    services: [googleAnalytics],
+    ...uiPreset.provider,
+  }}
+>
+  <ConsentBanner {...uiPreset.banner} />
+  <ConsentModal {...uiPreset.modal} />
+</ConsentProvider>
+```
+
+You can also use Spanish aliases in the helper: `corporativo` and `alto-contraste`.
 
 ## Privacy Signals (DNT & GPC)
 
@@ -152,7 +184,7 @@ if (isAnyPrivacySignalEnabled()) {
 
 // Get detailed status
 const status = getPrivacySignalStatus();
-// { dnt: boolean, gpc: boolean, any: boolean }
+// { doNotTrack: boolean, globalPrivacyControl: boolean }
 ```
 
 ## Preview Mode
@@ -375,10 +407,12 @@ If you add new tracking categories, you can prompt users to review their prefere
 You can check programmatically if re-consent is needed using the storage utilities:
 
 ```tsx
-import { storageManager } from 'react-consent-shield';
+import { ConsentStorage } from 'react-consent-shield';
+
+const storage = new ConsentStorage('consent_preferences');
 
 // Check if user needs to re-consent
-const needsNew = storageManager.needsReconsent(
+const needsNew = storage.needsReconsent(
   '2.0',           // current policy version
   365,             // reconsent days
   true,            // reconsent on policy change
@@ -411,7 +445,7 @@ The **showCookieCount** prop is particularly useful for legal compliance. When e
 | className | string | Additional CSS class for styling |
 | style | object | Inline styles |
 | position | string | Override banner position |
-| theme | string | Override theme |
+| theme | string | Override theme: 'light', 'dark', 'auto', 'high-contrast' |
 | showAcceptButton | boolean | Show the accept all button |
 | showRejectButton | boolean | Show the reject all button |
 | showPreferencesButton | boolean | Show the customize button |
@@ -437,7 +471,7 @@ The **allowServiceSelection** prop is an administrator setting. When set to `tru
 |------|------|---------|-------------|
 | className | string | - | Additional CSS class |
 | style | object | - | Inline styles |
-| theme | string | - | Override theme |
+| theme | string | - | Override theme: 'light', 'dark', 'auto', 'high-contrast' |
 | closeOnBackdropClick | boolean | false | Close when clicking outside modal |
 | allowServiceSelection | boolean | false | Allow users to toggle individual services |
 

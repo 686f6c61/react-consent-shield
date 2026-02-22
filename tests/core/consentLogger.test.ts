@@ -17,6 +17,7 @@ import {
   getAnonymizedUserAgent,
   createLogEntry,
 } from '../../src/core/consentLogger';
+import { LOGS_STORAGE_KEY } from '../../src/constants';
 import type { ConsentState } from '../../src/types';
 
 describe('consentLogger', () => {
@@ -82,6 +83,25 @@ describe('consentLogger', () => {
       expect(typeof ua).toBe('string');
       // Should not contain full user agent string
       expect(ua.length).toBeLessThan(navigator.userAgent.length);
+    });
+
+    it('should fallback to unknown labels when browser info is missing', () => {
+      const userAgentSpy = vi
+        .spyOn(window.navigator, 'userAgent', 'get')
+        .mockReturnValue('CustomAgentWithoutKnownTokens');
+      expect(getAnonymizedUserAgent()).toBe('Unknown on Unknown');
+      userAgentSpy.mockRestore();
+    });
+
+    it('should extract browser and OS when recognizable', () => {
+      const userAgentSpy = vi
+        .spyOn(window.navigator, 'userAgent', 'get')
+        .mockReturnValue(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0.0.0 Safari/537.36'
+        );
+
+      expect(getAnonymizedUserAgent()).toBe('Chrome/123.0.0.0 on Windows');
+      userAgentSpy.mockRestore();
     });
   });
 
@@ -159,6 +179,26 @@ describe('consentLogger', () => {
         );
       });
 
+      it('should catch callback errors and continue', () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const callback = vi.fn(() => {
+          throw new Error('callback failed');
+        });
+        const loggerWithCallback = new ConsentLogger({
+          callback,
+          maxEntries: 10,
+        });
+
+        loggerWithCallback.log('initial', mockState);
+
+        expect(loggerWithCallback.getLogs().length).toBe(1);
+        expect(errorSpy).toHaveBeenCalledWith(
+          'Consent log callback error:',
+          expect.any(Error)
+        );
+        errorSpy.mockRestore();
+      });
+
       it('should not log when disabled', () => {
         const disabledLogger = new ConsentLogger({ enabled: false });
         disabledLogger.clearLogs();
@@ -186,6 +226,15 @@ describe('consentLogger', () => {
         expect(logs[0].action).toBe('initial');
         expect(logs[1].action).toBe('update');
       });
+
+      it('should return empty array when stored logs are malformed', () => {
+        const getItemSpy = vi
+          .spyOn(window.localStorage, 'getItem')
+          .mockReturnValueOnce('{malformed');
+
+        expect(logger.getLogs()).toEqual([]);
+        getItemSpy.mockRestore();
+      });
     });
 
     describe('clearLogs', () => {
@@ -197,6 +246,17 @@ describe('consentLogger', () => {
 
         const logs = logger.getLogs();
         expect(logs.length).toBe(0);
+      });
+
+      it('should ignore storage errors while clearing', () => {
+        const removeSpy = vi
+          .spyOn(window.localStorage, 'removeItem')
+          .mockImplementationOnce(() => {
+            throw new Error('blocked');
+          });
+
+        expect(() => logger.clearLogs()).not.toThrow();
+        removeSpy.mockRestore();
       });
     });
 
@@ -249,6 +309,40 @@ describe('consentLogger', () => {
 
         // Value with comma should be quoted
         expect(csv).toContain('"US, CA"');
+      });
+
+      it('should render Yes values for all category columns when enabled', () => {
+        logger.log('update', {
+          ...mockState,
+          categories: {
+            necessary: true,
+            functional: true,
+            analytics: true,
+            marketing: true,
+            personalization: true,
+          },
+        });
+
+        const csv = logger.exportAsCsv();
+        expect(csv).toContain(',Yes,Yes,Yes,Yes,Yes,');
+      });
+
+      it('should render No/empty fallbacks for categories and geo metadata', () => {
+        logger.log('initial', {
+          ...mockState,
+          categories: {
+            necessary: false,
+            functional: false,
+            analytics: false,
+            marketing: false,
+            personalization: false,
+          },
+          region: null,
+          law: null,
+        });
+
+        const csv = logger.exportAsCsv();
+        expect(csv).toContain(',No,No,No,No,No,,,');
       });
     });
 
@@ -336,6 +430,17 @@ describe('consentLogger', () => {
         expect(result.valid).toBe(2);
         expect(result.invalid).toBe(0);
       });
+
+      it('should count invalid entries when hashes do not match', () => {
+        logger.log('initial', mockState);
+        const logs = logger.getLogs();
+        logs[0].action = 'update';
+        window.localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
+
+        const result = logger.verifyAllLogs();
+        expect(result.valid).toBe(0);
+        expect(result.invalid).toBe(1);
+      });
     });
 
     describe('setEnabled', () => {
@@ -380,6 +485,24 @@ describe('consentLogger', () => {
 
         expect(stats.acceptRate).toBeGreaterThan(0);
       });
+
+      it('should classify null law as none and count initial accepts', () => {
+        logger.log('initial', {
+          ...mockState,
+          law: null,
+          categories: { ...mockState.categories, marketing: true },
+        });
+
+        const stats = logger.getStatistics();
+        expect(stats.byLaw.none).toBe(1);
+        expect(stats.acceptRate).toBe(100);
+      });
+
+      it('should return zero accept rate when there are no logs', () => {
+        const stats = logger.getStatistics();
+        expect(stats.total).toBe(0);
+        expect(stats.acceptRate).toBe(0);
+      });
     });
 
     describe('setCallback', () => {
@@ -400,6 +523,49 @@ describe('consentLogger', () => {
         logger.setEnabled(false);
         expect(logger.isEnabled()).toBe(false);
       });
+    });
+  });
+
+  describe('storage failure handling', () => {
+    it('should warn when writing logs fails', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const setItemSpy = vi
+        .spyOn(window.localStorage, 'setItem')
+        .mockImplementationOnce(() => {
+          throw new Error('quota');
+        });
+
+      const logger = new ConsentLogger();
+      logger.log('initial', mockState);
+
+      expect(warnSpy).toHaveBeenCalledWith('Failed to save consent log');
+      setItemSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe('server guards', () => {
+    it('should return safe defaults when window is unavailable', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../../src/core/consentLogger');
+      const logger = new module.ConsentLogger();
+
+      expect(module.generateSessionId()).toBe('server');
+      expect(module.getAnonymizedUserAgent()).toBe('server');
+      expect(() =>
+        logger.log('initial', {
+          ...mockState,
+          law: null,
+        })
+      ).not.toThrow();
+      expect(logger.getLogs()).toEqual([]);
+      expect(() => logger.clearLogs()).not.toThrow();
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
     });
   });
 });

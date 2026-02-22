@@ -153,11 +153,8 @@ app.use((req, res, next) => {
 <ConsentProvider
   config={{
     services: [...],
-    geoDetection: {
-      enabled: true,
-      method: 'headers',  // Use CDN headers for detection
-      fallback: 'strictest',
-    },
+    geoDetection: 'headers',   // Use CDN headers for detection
+    geoFallback: 'strictest',
   }}
 >
   ...

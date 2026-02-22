@@ -15,6 +15,27 @@ interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.9.2',
+    date: '2026-02-22',
+    type: 'patch',
+    changes: [
+      {
+        type: 'added',
+        items: [
+          'Popup theme presets helper: corporate, minimal, high-contrast',
+          'Preset selector integrated into demo banner configurator',
+        ],
+      },
+      {
+        type: 'fixed',
+        items: [
+          'Deduplicated React/ReactDOM in Vite demo to prevent hook runtime errors with local file dependency links',
+          'Aligned docs examples with the current geo-detection API and popup preset usage',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.0.9',
     date: '2024-12-01',
     type: 'patch',
@@ -119,11 +140,11 @@ const CHANGELOG: ChangelogEntry[] = [
           'ConsentProvider, ConsentBanner, ConsentModal, ConsentScript components',
           'useConsent, useConsentCategory, useConsentService, useGeoDetection hooks',
           '39 privacy laws: GDPR (32 regions), UK GDPR, CCPA/CPRA, 18 US states, LGPD, PIPEDA, 10 LatAm, 4 Asia-Pacific',
-          '284+ service presets across 18 tiers',
+          '274 service presets across multiple tiers',
           'Google Consent Mode v2 integration',
           'Cookie scanner for compliance auditing',
           'Audit logging with SHA-256 hash verification',
-          '6 languages: EN, ES, PT, FR, DE, IT',
+          '10 languages: EN, ES, PT, FR, DE, IT, NL, PL, JA, ZH',
           'TypeScript with full type definitions',
           'ESM, CJS, UMD builds',
         ],

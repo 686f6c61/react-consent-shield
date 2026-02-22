@@ -136,8 +136,6 @@ const US_STATES: Record<string, string> = {
 
 // Get cached geo result
 function getGeoCache(): GeoResult | null {
-  if (!isBrowser) return null;
-
   try {
     const cached = localStorage.getItem(GEO_CACHE_KEY);
     if (!cached) return null;
@@ -159,8 +157,6 @@ function getGeoCache(): GeoResult | null {
 
 // Set geo cache
 function setGeoCache(result: GeoResult): void {
-  if (!isBrowser) return;
-
   try {
     localStorage.setItem(
       GEO_CACHE_KEY,

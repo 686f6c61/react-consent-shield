@@ -17,6 +17,9 @@ import {
   clearGeoCache,
   getFullRegion,
   setGeoRateLimitConfig,
+  getGeoRateLimitConfig,
+  applyGeoFallback,
+  detectGeoWithFallback,
 } from '../../src/core/geoDetection';
 
 describe('geoDetection', () => {
@@ -223,6 +226,133 @@ describe('geoDetection', () => {
 
       expect(result).toBeNull();
     });
+
+    it('should skip invalid API payload and use next endpoint', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ country: 'CA' }),
+      } as Response);
+
+      const result = await detectFromApi();
+
+      expect(result?.country).toBe('CA');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('should clear expired cache entries before using API', async () => {
+      const removeItemSpy = vi.spyOn(window.localStorage, 'removeItem');
+      window.localStorage.setItem(
+        'consent_geo_cache',
+        JSON.stringify({
+          result: { country: 'US', source: 'api' },
+          timestamp: Date.now() - (2 * 60 * 60 * 1000),
+        })
+      );
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ country_code: 'GB' }),
+      } as Response);
+
+      const result = await detectFromApi();
+
+      expect(removeItemSpy).toHaveBeenCalledWith('consent_geo_cache');
+      expect(result?.country).toBe('GB');
+    });
+
+    it('should allow API requests if cache write fails', async () => {
+      const localStorageSpy = vi
+        .spyOn(window.localStorage, 'setItem')
+        .mockImplementationOnce(() => {
+          throw new Error('quota');
+        });
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ country_code: 'NO' }),
+      } as Response);
+
+      const result = await detectFromApi();
+
+      expect(result?.country).toBe('NO');
+      localStorageSpy.mockRestore();
+    });
+
+    it('should allow request when rate limit storage access fails', async () => {
+      const throwingSessionStorage = {
+        getItem: vi.fn(() => {
+          throw new Error('storage blocked');
+        }),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+        key: vi.fn(() => null),
+        length: 0,
+      } as unknown as Storage;
+      const sessionStorageSpy = vi
+        .spyOn(window, 'sessionStorage', 'get')
+        .mockReturnValue(throwingSessionStorage);
+
+      setGeoRateLimitConfig({ enabled: true, maxRequests: 1, windowMs: 60000 });
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ country_code: 'SE' }),
+      } as Response);
+
+      const result = await detectFromApi();
+      expect(result?.country).toBe('SE');
+
+      sessionStorageSpy.mockRestore();
+      setGeoRateLimitConfig({ enabled: false });
+    });
+
+    it('should recover from malformed geo cache', async () => {
+      window.localStorage.setItem('consent_geo_cache', '{invalid json');
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ country_code: 'NL' }),
+      } as Response);
+
+      const result = await detectFromApi();
+
+      expect(result?.country).toBe('NL');
+    });
+
+    it('should fallback to US region_code when state name is unknown', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          country_code: 'US',
+          region: 'UnknownState',
+          region_code: 'ZZ',
+        }),
+      } as Response);
+
+      const result = await detectFromApi();
+      expect(result?.region).toBe('US-ZZ');
+    });
+
+    it('should stop when rate limit is exceeded', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      setGeoRateLimitConfig({ enabled: true, maxRequests: 1, windowMs: 60000 });
+      clearGeoCache();
+      window.sessionStorage.removeItem('rck-geo-ratelimit');
+      vi.mocked(global.fetch).mockRejectedValue(new Error('network'));
+
+      await detectFromApi();
+      const second = await detectFromApi();
+
+      expect(second).toBeNull();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[react-consent-shield] Geo API rate limit exceeded'
+      );
+      warnSpy.mockRestore();
+      setGeoRateLimitConfig({ enabled: false });
+    });
   });
 
   describe('detectGeo', () => {
@@ -276,6 +406,11 @@ describe('geoDetection', () => {
     it('should return null for manual method without forceRegion', async () => {
       const result = await detectGeo('manual');
 
+      expect(result).toBeNull();
+    });
+
+    it('should return null for unsupported detection method', async () => {
+      const result = await detectGeo('unsupported' as never);
       expect(result).toBeNull();
     });
 
@@ -339,6 +474,81 @@ describe('geoDetection', () => {
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(result?.country).toBe('PE');
       expect(result?.source).toBe('api');
+    });
+
+    it('should ignore localStorage removal errors', () => {
+      const removeSpy = vi
+        .spyOn(window.localStorage, 'removeItem')
+        .mockImplementationOnce(() => {
+          throw new Error('blocked');
+        });
+
+      expect(() => clearGeoCache()).not.toThrow();
+      removeSpy.mockRestore();
+    });
+  });
+
+  describe('rate limit config', () => {
+    it('should expose a copy of current rate limit config', () => {
+      setGeoRateLimitConfig({ enabled: true, maxRequests: 3, windowMs: 1000 });
+      const config = getGeoRateLimitConfig();
+      config.maxRequests = 999;
+
+      expect(getGeoRateLimitConfig().maxRequests).toBe(3);
+      setGeoRateLimitConfig({ enabled: false, maxRequests: 5, windowMs: 60000 });
+    });
+  });
+
+  describe('fallback helpers', () => {
+    it('should apply all fallback strategies', () => {
+      expect(applyGeoFallback('strictest')?.country).toBe('DE');
+      expect(applyGeoFallback('permissive')?.country).toBe('XX');
+      expect(applyGeoFallback('region', 'BR')?.country).toBe('BR');
+      expect(applyGeoFallback('region')).toBeNull();
+      expect(applyGeoFallback('showWarning')?.fallbackUsed).toBe(true);
+      expect(applyGeoFallback('none')).toBeNull();
+    });
+
+    it('should keep detected geo when detection succeeds', async () => {
+      const result = await detectGeoWithFallback('headers', {
+        headers: { 'CF-IPCountry': 'US', 'CF-Region': 'California' },
+        fallbackStrategy: 'strictest',
+      });
+
+      expect(result?.source).toBe('headers');
+      expect(result?.country).toBe('US');
+    });
+
+    it('should apply fallback when detection fails', async () => {
+      vi.mocked(global.fetch).mockRejectedValue(new Error('network'));
+      const result = await detectGeoWithFallback('api', {
+        fallbackStrategy: 'strictest',
+      });
+
+      expect(result?.source).toBe('fallback');
+      expect(result?.fallbackUsed).toBe(true);
+      expect(result?.country).toBe('DE');
+    });
+
+    it('should return null when no fallback strategy is set', async () => {
+      const result = await detectGeoWithFallback('manual');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('server guards', () => {
+    it('should return null in non-browser API detection path', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../../src/core/geoDetection');
+      expect(await module.detectFromApi()).toBeNull();
+      expect(module.clearGeoCache()).toBeUndefined();
+      expect(module.getGeoRateLimitConfig()).toBeDefined();
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
     });
   });
 });

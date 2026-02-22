@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -128,11 +128,8 @@ Content-Security-Policy:
 ```tsx
 <ConsentProvider
   config={{
-    geoDetection: {
-      enabled: false,
-      // Use manual region setting instead
-      forceRegion: 'DE', // or determine server-side
-    },
+    geoDetection: 'manual',
+    forceRegion: 'DE', // set manually or determine server-side
   }}
 >
 ```
@@ -150,7 +147,7 @@ SRI allows browsers to verify that resources fetched from CDNs haven't been modi
 ```html
 <!-- With SRI enabled - browser verifies integrity -->
 <script
-  src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"
+  src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"
   integrity="sha384-HASH_WILL_BE_GENERATED_ON_RELEASE"
   crossorigin="anonymous"
 ></script>
@@ -160,7 +157,7 @@ SRI allows browsers to verify that resources fetched from CDNs haven't been modi
 
 ```html
 <!-- Without SRI - no integrity verification -->
-<script src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"></script>
+<script src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"></script>
 ```
 
 ### When to Use SRI
@@ -178,7 +175,7 @@ To generate your own SRI hash:
 
 ```bash
 # Download the file and generate hash
-curl -s https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js | \
+curl -s https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js | \
   openssl dgst -sha384 -binary | \
   openssl base64 -A
 

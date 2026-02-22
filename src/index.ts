@@ -28,6 +28,18 @@ export { ConsentModal } from './components/ConsentModal';
 export { ConsentScript } from './components/ConsentScript';
 export { ConsentStyles } from './components/ConsentStyles';
 
+// Popup theme presets
+export {
+  popupThemePresets,
+  popupThemePresetIds,
+  getPopupThemePreset,
+} from './popupThemePresets';
+export type {
+  PopupThemePresetId,
+  PopupThemeStyle,
+  PopupThemePreset,
+} from './popupThemePresets';
+
 // Presets
 export {
   allPresets,

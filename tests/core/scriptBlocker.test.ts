@@ -15,12 +15,17 @@ import {
   getBlockedScriptsByCategory,
   unblockScript,
   unblockCategory,
+  unblockBasedOnConsent,
   domainMatches,
   getCategoryForScript,
   createBlockedScript,
   isScriptBlocked,
+  insertBlockedScript,
+  removeScriptsByCategory,
+  getLoadedScriptsByCategory,
+  initScriptInterceptor,
 } from '../../src/core/scriptBlocker';
-import type { ServicePreset } from '../../src/types';
+import type { ServicePreset, ConsentState } from '../../src/types';
 
 describe('scriptBlocker', () => {
   beforeEach(() => {
@@ -223,6 +228,57 @@ describe('scriptBlocker', () => {
       // Script should still be there (not replaced)
       expect(script.getAttribute('data-consent-loaded')).toBe('true');
     });
+
+    it('should unblock external script and set loaded metadata on load', async () => {
+      const script = createBlockedScript('analytics', {
+        src: 'https://cdn.example.com/tracker.js',
+        serviceId: 'tracker-service',
+      });
+      document.head.appendChild(script);
+
+      const promise = unblockScript(script);
+      const loaded = document.head.querySelector(
+        'script[type="text/javascript"]'
+      ) as HTMLScriptElement;
+
+      expect(loaded).toBeTruthy();
+      expect(loaded.getAttribute('data-consent-category')).toBe('analytics');
+      expect(loaded.getAttribute('data-service-id')).toBe('tracker-service');
+
+      loaded.onload?.(new Event('load'));
+      await expect(promise).resolves.toBeUndefined();
+      expect(loaded.getAttribute('data-consent-loaded')).toBe('true');
+    });
+
+    it('should reject when external script fails to load', async () => {
+      const script = createBlockedScript('analytics', {
+        src: 'https://cdn.example.com/fail.js',
+      });
+      document.head.appendChild(script);
+
+      const promise = unblockScript(script);
+      const loaded = document.head.querySelector(
+        'script[type="text/javascript"]'
+      ) as HTMLScriptElement;
+
+      loaded.onerror?.(new Event('error'));
+      await expect(promise).rejects.toThrow(
+        'Failed to load script: https://cdn.example.com/fail.js'
+      );
+    });
+
+    it('should append unblocked script to head when source script has no parent', async () => {
+      const detachedScript = createBlockedScript('functional', {
+        content: 'console.log("detached");',
+      });
+
+      await unblockScript(detachedScript);
+
+      const loaded = document.head.querySelector(
+        'script[type="text/javascript"][data-consent-category="functional"]'
+      );
+      expect(loaded).toBeTruthy();
+    });
   });
 
   describe('unblockCategory', () => {
@@ -262,6 +318,203 @@ describe('scriptBlocker', () => {
       await unblockCategory('analytics', onScriptLoaded);
 
       expect(onScriptLoaded).toHaveBeenCalledWith('test-service');
+    });
+
+    it('should log and continue when one script fails to unblock', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const failing = createBlockedScript('analytics', {
+        src: 'https://cdn.example.com/fail.js',
+      });
+      const succeeding = createBlockedScript('analytics', {
+        content: 'console.log("ok");',
+      });
+
+      document.head.appendChild(failing);
+      document.head.appendChild(succeeding);
+
+      const promise = unblockCategory('analytics');
+      const loadedFailing = document.head.querySelector(
+        'script[type="text/javascript"]'
+      ) as HTMLScriptElement;
+      loadedFailing.onerror?.(new Event('error'));
+
+      await promise;
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to unblock script:',
+        expect.any(Error)
+      );
+      expect(getBlockedScriptsByCategory('analytics')).toHaveLength(0);
+      errorSpy.mockRestore();
+    });
+  });
+
+  describe('unblockBasedOnConsent', () => {
+    it('should unblock only enabled categories', async () => {
+      const analyticsScript = createBlockedScript('analytics', {
+        content: 'console.log("analytics");',
+        serviceId: 'ga',
+      });
+      const marketingScript = createBlockedScript('marketing', {
+        content: 'console.log("marketing");',
+        serviceId: 'mp',
+      });
+      document.head.appendChild(analyticsScript);
+      document.head.appendChild(marketingScript);
+
+      const state: ConsentState = {
+        hasConsented: true,
+        timestamp: new Date().toISOString(),
+        categories: {
+          necessary: true,
+          functional: false,
+          analytics: true,
+          marketing: false,
+          personalization: false,
+        },
+        services: { ga: true, mp: false },
+        region: 'EU',
+        law: 'gdpr',
+        policyVersion: '1.0.0',
+      };
+
+      const onScriptLoaded = vi.fn();
+      await unblockBasedOnConsent(state, onScriptLoaded);
+
+      expect(getBlockedScriptsByCategory('analytics')).toHaveLength(0);
+      expect(getBlockedScriptsByCategory('marketing')).toHaveLength(1);
+      expect(onScriptLoaded).toHaveBeenCalledWith('ga');
+      expect(onScriptLoaded).not.toHaveBeenCalledWith('mp');
+    });
+  });
+
+  describe('DOM helpers', () => {
+    it('should insert blocked scripts in head and body', () => {
+      const headScript = createBlockedScript('analytics', {
+        content: 'console.log("head");',
+      });
+      const bodyScript = createBlockedScript('marketing', {
+        content: 'console.log("body");',
+      });
+
+      insertBlockedScript(headScript, 'head');
+      insertBlockedScript(bodyScript, 'body');
+
+      expect(document.head.contains(headScript)).toBe(true);
+      expect(document.body.contains(bodyScript)).toBe(true);
+    });
+
+    it('should return and remove loaded scripts by category', () => {
+      const analyticsLoaded = document.createElement('script');
+      analyticsLoaded.setAttribute('data-consent-category', 'analytics');
+      analyticsLoaded.setAttribute('data-consent-loaded', 'true');
+      const marketingLoaded = document.createElement('script');
+      marketingLoaded.setAttribute('data-consent-category', 'marketing');
+      marketingLoaded.setAttribute('data-consent-loaded', 'true');
+
+      document.head.appendChild(analyticsLoaded);
+      document.head.appendChild(marketingLoaded);
+
+      expect(getLoadedScriptsByCategory('analytics')).toHaveLength(1);
+      removeScriptsByCategory('analytics');
+      expect(getLoadedScriptsByCategory('analytics')).toHaveLength(0);
+      expect(getLoadedScriptsByCategory('marketing')).toHaveLength(1);
+    });
+  });
+
+  describe('initScriptInterceptor', () => {
+    const presets: ServicePreset[] = [
+      {
+        id: 'google-analytics',
+        name: 'Google Analytics',
+        category: 'analytics',
+        domains: ['www.googletagmanager.com'],
+        cookies: ['_ga'],
+      },
+    ];
+
+    it('should block dynamic script src when consent is not granted', () => {
+      const cleanup = initScriptInterceptor(presets, () => false);
+      const script = document.createElement('script');
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=GA-1';
+
+      expect(script.type).toBe('text/plain');
+      expect(script.getAttribute('data-consent-category')).toBe('analytics');
+      expect(script.getAttribute('data-consent-src')).toContain(
+        'www.googletagmanager.com'
+      );
+
+      cleanup();
+    });
+
+    it('should allow dynamic script src when consent is granted', () => {
+      const cleanup = initScriptInterceptor(presets, () => true);
+      const script = document.createElement('script');
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=GA-1';
+
+      expect(script.type).not.toBe('text/plain');
+      expect(script.getAttribute('data-consent-src')).toBeNull();
+      expect(script.src).toContain('www.googletagmanager.com');
+
+      cleanup();
+    });
+
+    it('should restore original createElement after cleanup', () => {
+      const cleanup = initScriptInterceptor(presets, () => false);
+
+      cleanup();
+
+      const script = document.createElement('script');
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=GA-1';
+      expect(script.type).not.toBe('text/plain');
+    });
+
+    it('should fallback to empty src when descriptor getter is missing', () => {
+      const descriptorSpy = vi
+        .spyOn(Object, 'getOwnPropertyDescriptor')
+        .mockImplementation((obj, prop) => {
+          if (obj === HTMLScriptElement.prototype && prop === 'src') {
+            return {
+              configurable: true,
+              enumerable: true,
+              set(this: HTMLScriptElement, value: string) {
+                this.setAttribute('src', value);
+              },
+            };
+          }
+
+          return Reflect.getOwnPropertyDescriptor(obj, prop);
+        });
+
+      const cleanup = initScriptInterceptor(presets, () => true);
+      const script = document.createElement('script');
+
+      expect(script.src).toBe('');
+
+      cleanup();
+      descriptorSpy.mockRestore();
+    });
+  });
+
+  describe('server guards', () => {
+    it('should return safe defaults when window is unavailable', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../../src/core/scriptBlocker');
+
+      expect(module.getBlockedScripts()).toEqual([]);
+      expect(module.getBlockedScriptsByCategory('analytics')).toEqual([]);
+      await expect(module.unblockScript({} as HTMLScriptElement)).resolves.toBeUndefined();
+      expect(module.getLoadedScriptsByCategory('analytics')).toEqual([]);
+      module.insertBlockedScript(document.createElement('script'));
+      module.removeScriptsByCategory('analytics');
+      const cleanup = module.initScriptInterceptor([], () => false);
+      cleanup();
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
     });
   });
 });

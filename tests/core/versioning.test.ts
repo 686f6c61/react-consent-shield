@@ -205,6 +205,23 @@ describe('versioning', () => {
       stored.version = '2.0.0';
       expect(hasVersionChanged(stored, config, mockServices)).toBe(false);
     });
+
+    it('should use manual fallback version when config.version is missing', () => {
+      const config: ConsentVersioningConfig = {
+        enabled: true,
+        mode: 'manual',
+      };
+      const stored: ConsentVersionInfo = {
+        version: '2.0.0',
+        mode: 'manual',
+        servicesHash: 'hash',
+        timestamp: new Date().toISOString(),
+      };
+
+      expect(hasVersionChanged(stored, config, mockServices)).toBe(true);
+      stored.version = '1.0.0';
+      expect(hasVersionChanged(stored, config, mockServices)).toBe(false);
+    });
   });
 
   describe('getVersionChangeDescription', () => {
@@ -237,6 +254,25 @@ describe('versioning', () => {
 
       expect(getVersionChangeDescription(stored, config, mockServices, 'en')).toBe('Custom update message');
       expect(getVersionChangeDescription(stored, config, mockServices, 'es')).toBe('Mensaje personalizado');
+    });
+
+    it('should fallback to custom English message when locale key is missing', () => {
+      const config: ConsentVersioningConfig = {
+        enabled: true,
+        updateMessage: {
+          en: 'English fallback message',
+        },
+      };
+      const stored: ConsentVersionInfo = {
+        version: 'old',
+        mode: 'auto',
+        servicesHash: 'oldhash',
+        timestamp: new Date().toISOString(),
+      };
+
+      expect(getVersionChangeDescription(stored, config, mockServices, 'fr')).toBe(
+        'English fallback message'
+      );
     });
 
     it('should return default message in correct language', () => {

@@ -80,15 +80,14 @@ function App() {
 // Subsequent page loads use cached result
 
 // Force re-detection if needed
-sessionStorage.removeItem('rck-geo-cache');
+import { clearGeoCache } from 'react-consent-shield';
+clearGeoCache();
 
-// Or use manual detection
+// Or keep detection lightweight with CDN headers
 <ConsentProvider
   config={{
-    geoDetection: {
-      enabled: true,
-      cacheTime: 3600000, // 1 hour (default)
-    },
+    geoDetection: 'headers',
+    geoFallback: 'strictest',
   }}
 >`}</pre>
       </div>

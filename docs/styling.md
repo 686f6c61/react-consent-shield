@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -31,6 +31,43 @@ The library includes 8 pre-built banner variants:
 <ConsentBanner variant="minimal" />
 <ConsentBanner variant="corner" />
 ```
+
+## Ready-to-Use Popup Presets
+
+You can apply predefined popup styles with one helper:
+
+```tsx
+import {
+  ConsentProvider,
+  ConsentBanner,
+  ConsentModal,
+  getPopupThemePreset,
+  googleAnalytics,
+} from 'react-consent-shield';
+
+const uiPreset = getPopupThemePreset('corporate');
+
+<ConsentProvider
+  config={{
+    services: [googleAnalytics],
+    ...uiPreset.provider,
+  }}
+>
+  <ConsentBanner {...uiPreset.banner} />
+  <ConsentModal {...uiPreset.modal} />
+</ConsentProvider>
+```
+
+Preset options:
+
+- `corporate`: professional card layout for SaaS/corporate products
+- `minimal`: compact low-noise style for editorial/content sites
+- `high-contrast`: accessibility-first style with strong color contrast
+
+Aliases available in the helper:
+
+- `corporativo` -> `corporate`
+- `alto-contraste` -> `high-contrast`
 
 ## CSS Variables
 

@@ -58,7 +58,7 @@ function sanitizeStoredData(data: unknown): StoredConsentData | null {
 
   // Validate types
   if (typeof obj.v !== 'string' || typeof obj.t !== 'string') return null;
-  if (typeof obj.c !== 'object' || obj.c === null) return null;
+  if (typeof obj.c !== 'object') return null;
 
   // Sanitize version string
   const version = sanitizeString(String(obj.v));
@@ -105,7 +105,7 @@ function sanitizeStoredData(data: unknown): StoredConsentData | null {
   if (obj.l !== undefined) {
     if (obj.l === null) {
       law = null;
-    } else if (typeof obj.l === 'string' && /^[a-z_]+$/.test(obj.l)) {
+    } else if (typeof obj.l === 'string' && /^[a-z-]+$/.test(obj.l)) {
       law = obj.l as LawType;
     }
   }

@@ -6,8 +6,8 @@ Includes automatic geo-detection for 52 privacy laws worldwide (GDPR, CCPA, LGPD
 
 [![npm version](https://img.shields.io/npm/v/react-consent-shield.svg)](https://www.npmjs.com/package/react-consent-shield)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](./LICENSE)
-[![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](./tests/COVERAGE.txt)
-[![Tests](https://img.shields.io/badge/tests-323%20passing-brightgreen.svg)](./tests/)
+[![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-435%20passing-brightgreen.svg)](#testing)
 
 [![React 18](https://img.shields.io/badge/React-18-61dafb.svg?logo=react)](https://react.dev/)
 [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react)](https://react.dev/)
@@ -15,6 +15,8 @@ Includes automatic geo-detection for 52 privacy laws worldwide (GDPR, CCPA, LGPD
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black.svg?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg?logo=typescript)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-339933.svg?logo=node.js)](https://nodejs.org/)
+
+**Current release:** `v0.9.2`
 
 **Live demo:** [react-consent-shield.onrender.com](https://react-consent-shield.onrender.com)
 
@@ -29,18 +31,19 @@ Includes automatic geo-detection for 52 privacy laws worldwide (GDPR, CCPA, LGPD
 The library provides everything needed to implement cookie consent in a React application. Each feature is designed to work independently or together with others, so you can start simple and add complexity as needed.
 
 - **Real script blocking** - Actually blocks tracking scripts until consent is given
-- **Geographic detection** - Automatically applies the correct privacy law based on user location
+- **Geographic detection** - Automatically applies the correct privacy law based on user location (`headers` by default)
 - **274 service presets** - Google Analytics, Meta Pixel, Hotjar, TikTok, regional services (Yandex, Baidu, Naver...), and many more
 - **Google Consent Mode v2** - Full integration with automatic consent signal updates
 - **Cookie scanner** - Detects undeclared cookies for compliance auditing
-- **Audit logging** - Cryptographically verified consent records
+- **Audit logging** - Hash-verified, tamper-evident consent records
 - **Compliance reports** - Generate JSON/HTML reports for privacy audits
 - **Consent versioning** - Auto-detect service changes and prompt re-consent
 - **Subdomain sharing** - Share consent across subdomains automatically
 - **10 languages** - English, Spanish, German, French, Portuguese, Italian, Dutch, Polish, Japanese, Chinese
 - **WCAG 2.2 AA accessible** - Full keyboard navigation, screen reader support, focus trap, high contrast mode
 - **8 banner variants** - Default, fullwidth, modal, floating, card, minimal, corner, sidebar
-- **Age verification** - COPPA/GDPR-K compliance with checkbox, year, or birthdate verification
+- **3 popup theme presets** - `corporate`, `minimal`, `high-contrast` with ready-to-use styles
+- **Age verification** - COPPA/GDPR-K compliance with checkbox, year, birthdate, or age-gate verification
 - **TypeScript** - Full type definitions included
 - **Works everywhere** - Next.js, Vite, Create React App, plain HTML
 
@@ -58,14 +61,15 @@ An online store typically needs conversion tracking for marketing campaigns, hea
 <ConsentProvider
   config={{
     services: [googleAnalytics, metaPixel, hotjar],
-    geoDetection: { enabled: true },
+    geoDetection: 'headers',
+    geoFallback: 'strictest',
   }}
 >
 ```
 
 ### SaaS application with multiple tracking services
 
-A SaaS product often uses multiple analytics tools for different purposes: product analytics (Mixpanel, Amplitude), customer data platforms (Segment), and session recording for debugging (Clarity, FullStory). With `granularConsent: true`, users can choose exactly which services to enable, giving them more control while still allowing you to collect the data you need from users who opt in.
+A SaaS product often uses multiple analytics tools for different purposes: product analytics (Mixpanel, Amplitude), customer data platforms (Segment), and session recording for debugging (Clarity, FullStory). Users can choose category/service preferences with the built-in preferences flow, giving them more control while still allowing you to collect the data you need from users who opt in.
 
 ```tsx
 <ConsentProvider
@@ -77,30 +81,28 @@ A SaaS product often uses multiple analytics tools for different purposes: produ
       microsoftClarity,
       fullstory,
     ],
-    granularConsent: true,
+    showPreferencesButton: true,
   }}
 >
 ```
 
 ### Multi-region compliance
 
-When your application serves users from multiple countries, you need to handle different consent requirements. The library detects the user's location and applies the appropriate law automatically. The `fallbackLaw` option ensures that if geo-detection fails, the strictest rules apply by default, keeping you compliant even in edge cases.
+When your application serves users from multiple countries, you need to handle different consent requirements. The library detects the user's location and applies the appropriate law automatically. The `geoFallback` option ensures that if geo-detection fails, the strictest rules apply by default, keeping you compliant even in edge cases.
 
 ```tsx
 <ConsentProvider
   config={{
     services: [googleAnalytics],
-    geoDetection: {
-      enabled: true,
-      fallbackLaw: 'GDPR', // Default to strictest
-    },
+    geoDetection: 'api',
+    geoFallback: 'strictest', // Default to strictest
   }}
 >
 ```
 
 ### Age-gated content and child protection
 
-If your site is aimed at or accessible to minors, regulations like COPPA (USA, under 13) and GDPR-K (EU, under 16) require parental consent or age verification before collecting any personal data. The library supports three verification methods: a simple checkbox declaration, year of birth selection, or full birthdate input. When a user doesn't meet the minimum age, tracking scripts remain blocked regardless of other consent choices.
+If your site is aimed at or accessible to minors, regulations like COPPA (USA, under 13) and GDPR-K (EU, under 16) require parental consent or age verification before collecting any personal data. The library supports four verification methods: checkbox declaration, year of birth, full birthdate input, or an explicit age-gate choice. When a user doesn't meet the minimum age, tracking scripts remain blocked regardless of other consent choices.
 
 ```tsx
 <ConsentProvider
@@ -108,7 +110,7 @@ If your site is aimed at or accessible to minors, regulations like COPPA (USA, u
     services: [googleAnalytics, metaPixel],
     ageVerification: {
       enabled: true,
-      method: 'birthdate', // 'checkbox' | 'year' | 'birthdate'
+      method: 'age-gate', // 'checkbox' | 'year' | 'birthdate' | 'age-gate'
       minimumAge: 16, // GDPR-K requirement
       parentalConsentRequired: true,
     },
@@ -124,12 +126,10 @@ Not every site needs complex analytics. For a personal blog or documentation sit
 <ConsentProvider
   config={{
     services: [plausible],
-    banner: {
-      variant: 'minimal',
-      position: 'bottom-right',
-    },
+    position: 'bottom-right',
   }}
 >
+  <ConsentBanner variant="minimal" />
 ```
 
 ---
@@ -167,6 +167,44 @@ function App() {
 ```
 
 That's it! Users will see a consent banner, and their preferences are saved automatically.
+
+---
+
+## Popup Theme Presets
+
+If you want a polished banner quickly, use the built-in presets:
+
+```tsx
+import {
+  ConsentProvider,
+  ConsentBanner,
+  ConsentModal,
+  getPopupThemePreset,
+  googleAnalytics,
+} from 'react-consent-shield';
+
+const uiPreset = getPopupThemePreset('corporate');
+
+function App() {
+  return (
+    <ConsentProvider
+      config={{
+        services: [googleAnalytics],
+        ...uiPreset.provider,
+      }}
+    >
+      <ConsentBanner {...uiPreset.banner} />
+      <ConsentModal {...uiPreset.modal} />
+    </ConsentProvider>
+  );
+}
+```
+
+Available presets:
+
+- `corporate`: professional card style for product/SaaS sites
+- `minimal`: low-noise bottom bar for content-first websites
+- `high-contrast`: accessibility-first visual style (WCAG-oriented)
 
 ---
 
@@ -215,7 +253,7 @@ For detailed documentation, see the [docs folder](./docs/):
 | [Google Consent Mode](./docs/google-consent-mode.md) | Integration with Google Consent Mode v2 | [View online](https://react-consent-shield.onrender.com#google-consent-mode) |
 | [Geographic Detection](./docs/geo-detection.md) | Automatic law detection and 52 supported laws | [View online](https://react-consent-shield.onrender.com#geo-detection) |
 | [Cookie Scanner](./docs/cookie-scanner.md) | Detect undeclared cookies for compliance | [View online](https://react-consent-shield.onrender.com#cookie-scanner) |
-| [Audit Logging](./docs/audit-logging.md) | Cryptographically verified consent records | [View online](https://react-consent-shield.onrender.com#audit-logs) |
+| [Audit Logging](./docs/audit-logging.md) | Hash-verified, tamper-evident consent records | [View online](https://react-consent-shield.onrender.com#audit-logs) |
 | [Compliance Report](./docs/compliance-report.md) | Generate technical reports for privacy audits | [View online](https://react-consent-shield.onrender.com#compliance-report) |
 | [Consent Versioning](./docs/consent-versioning.md) | Auto-detect service changes and re-consent | [View online](https://react-consent-shield.onrender.com#consent-versioning) |
 | [Subdomain Sharing](./docs/subdomain-sharing.md) | Share consent across subdomains | [View online](https://react-consent-shield.onrender.com#subdomain-sharing) |
@@ -244,13 +282,13 @@ Try the **[live demo](https://react-consent-shield.onrender.com)**:
 | [Script Blocking](https://react-consent-shield.onrender.com#script-blocking) | Conditional script loading demo |
 | [Audit Logs](https://react-consent-shield.onrender.com#audit-logs) | Consent history with hash verification |
 | [Compliance Report](https://react-consent-shield.onrender.com#compliance-report) | Generate technical implementation reports |
-| [i18n](https://react-consent-shield.onrender.com#i18n) | Switch between 6 languages |
+| [i18n](https://react-consent-shield.onrender.com#i18n) | Switch between 10 languages |
 
 ---
 
 ## Testing
 
-Every feature is covered by automated tests, including unit tests for individual functions, integration tests for component interactions, and end-to-end tests for complete user flows. The test suite validates all 274 service presets and all 10 language translations to ensure nothing breaks between releases.
+Every feature is covered by automated tests, including unit tests for individual functions and integration tests for component interactions. The test suite validates all 274 service presets and all 10 language translations to ensure nothing breaks between releases.
 
 This library is thoroughly tested with **100% code coverage**.
 
@@ -261,20 +299,18 @@ This library is thoroughly tested with **100% code coverage**.
 | Functions | 100% |
 | Lines | 100% |
 
-**323+ tests** covering:
+**435+ tests** covering:
 - Unit tests (Vitest + React Testing Library)
-- E2E tests (Playwright)
 - All 274 service presets validated
 - All 10 languages tested
 
 ```bash
 npm run test           # Run unit tests
+npm run test:watch     # Run tests in watch mode
 npm run test:coverage  # Run with coverage report
-npm run test:e2e       # Run E2E tests
-npm run test:all       # Run all tests
 ```
 
-See [tests/COVERAGE.txt](./tests/COVERAGE.txt) for detailed coverage report.
+Coverage output is generated in `coverage/` (open `coverage/index.html` for the HTML report).
 
 ---
 

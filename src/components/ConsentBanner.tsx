@@ -58,6 +58,7 @@ export function ConsentBanner({
   const [ageCheckbox, setAgeCheckbox] = useState(false);
   const [birthYear, setBirthYear] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [ageGateSelection, setAgeGateSelection] = useState<'adult' | 'underage' | null>(null);
   const [ageError, setAgeError] = useState<string | null>(null);
 
   // Generate unique IDs for ARIA accessibility (WCAG 2.2 AA)
@@ -334,6 +335,18 @@ export function ConsentBanner({
         return;
       }
       verifyAge(true);
+    } else if (ageMethod === 'age-gate') {
+      if (!ageGateSelection) {
+        setAgeError(t('ageVerification.checkboxConfirm') || 'Please select an option');
+        return;
+      }
+
+      const isAdult = ageGateSelection === 'adult';
+      verifyAge(isAdult);
+
+      if (!isAdult) {
+        setAgeError(getAgeMessage('underageMessage'));
+      }
     } else if (ageMethod === 'year') {
       const year = parseInt(birthYear, 10);
       if (isNaN(year) || birthYear.length !== 4) {
@@ -370,7 +383,8 @@ export function ConsentBanner({
 
   // Render age verification section
   const renderAgeVerification = () => {
-    if (!ageVerificationEnabled || ageVerified) return null;
+    if (!ageVerificationEnabled) return null;
+    if (ageVerified && !(isUnderage && ageConfig?.blockUnderage)) return null;
 
     // Show underage message if already determined as underage
     if (isUnderage && ageConfig?.blockUnderage) {
@@ -403,6 +417,33 @@ export function ConsentBanner({
               {(t('ageVerification.checkboxConfirm') || 'I confirm I am at least {age} years old').replace('{age}', String(minimumAge))}
             </span>
           </label>
+        )}
+
+        {ageMethod === 'age-gate' && (
+          <div className="rck-banner__age-input">
+            <label className="rck-banner__age-checkbox">
+              <input
+                type="radio"
+                name={`rck-age-gate-${uniqueId}`}
+                checked={ageGateSelection === 'adult'}
+                onChange={() => setAgeGateSelection('adult')}
+              />
+              <span>
+                {`I am ${minimumAge}+`}
+              </span>
+            </label>
+            <label className="rck-banner__age-checkbox">
+              <input
+                type="radio"
+                name={`rck-age-gate-${uniqueId}`}
+                checked={ageGateSelection === 'underage'}
+                onChange={() => setAgeGateSelection('underage')}
+              />
+              <span>
+                {`I am under ${minimumAge}`}
+              </span>
+            </label>
+          </div>
         )}
 
         {ageMethod === 'year' && (
@@ -438,7 +479,7 @@ export function ConsentBanner({
         )}
 
         {ageError && (
-          <p className="rck-banner__age-error">{ageError}</p>
+          <p id={ageErrorId} className="rck-banner__age-error">{ageError}</p>
         )}
 
         <button
@@ -459,7 +500,9 @@ export function ConsentBanner({
   };
 
   // Check if we should block consent buttons until age is verified
-  const shouldBlockConsent = ageVerificationEnabled && !ageVerified;
+  const shouldBlockConsent =
+    ageVerificationEnabled &&
+    (!ageVerified || (isUnderage && (ageConfig?.blockUnderage ?? false)));
 
   // Modal/blocking variant
   if (effectiveVariant === 'modal') {

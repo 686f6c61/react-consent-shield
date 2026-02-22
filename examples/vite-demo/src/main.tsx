@@ -1,6 +1,6 @@
 /**
  * react-consent-shield - Vite Demo
- * @version 0.9.0
+ * @version 0.9.2
  * @author 686f6c61
  * @license MIT
  * @repository https://github.com/686f6c61/react-consent-shield

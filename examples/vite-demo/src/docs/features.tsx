@@ -11,7 +11,7 @@ export function FeaturesDocs({ serviceCount }: FeaturesDocsProps) {
   return (
     <>
       <div className="demo-docs-section">
-        <h3>Current version: 1.0.9</h3>
+        <h3>Current version: 0.9.2</h3>
         <p>Production-ready with all core features implemented.</p>
       </div>
 
@@ -34,12 +34,16 @@ export function FeaturesDocs({ serviceCount }: FeaturesDocsProps) {
           <p>Country detection via CDN headers (Cloudflare, AWS, Vercel, Fastly, etc.)</p>
         </div>
         <div className="demo-feature-item">
-          <h4>6 banner variants</h4>
-          <p>Default, fullwidth, modal, floating, card, minimal</p>
+          <h4>8 banner variants</h4>
+          <p>Default, fullwidth, modal, floating, card, minimal, corner, sidebar</p>
+        </div>
+        <div className="demo-feature-item">
+          <h4>3 popup theme presets</h4>
+          <p>Corporate, minimal, and high-contrast presets for fast production styling</p>
         </div>
         <div className="demo-feature-item">
           <h4>Internationalization</h4>
-          <p>6 languages: English, Spanish, French, German, Italian, Portuguese</p>
+          <p>10 languages: English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Japanese, Chinese</p>
         </div>
         <div className="demo-feature-item">
           <h4>Google Consent Mode v2</h4>
@@ -54,8 +58,8 @@ export function FeaturesDocs({ serviceCount }: FeaturesDocsProps) {
           <p>Complete audit trail with hash verification, JSON/CSV export</p>
         </div>
         <div className="demo-feature-item">
-          <h4>50+ privacy laws</h4>
-          <p>GDPR, CCPA, LGPD, PIPEDA, POPIA, PDPA, 20+ US state laws, Latin America</p>
+          <h4>52 privacy laws</h4>
+          <p>GDPR, CCPA, LGPD, PIPEDA, POPIA, PDPA, 20+ US state laws, and regional frameworks worldwide</p>
         </div>
       </div>
 

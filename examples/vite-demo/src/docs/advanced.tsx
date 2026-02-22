@@ -170,13 +170,13 @@ setGeoRateLimitConfig({ enabled: false });`}</pre>
         <p>When using via CDN, you can optionally enable Subresource Integrity:</p>
         <pre className="demo-code">{`<!-- With SRI (recommended for production) -->
 <script
-  src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"
+  src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"
   integrity="sha384-YOUR_HASH_HERE"
   crossorigin="anonymous"
 ></script>
 
 <!-- Without SRI (simpler setup) -->
-<script src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"></script>
+<script src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"></script>
 
 <!-- Generate hash with: -->
 <!-- curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A -->`}</pre>

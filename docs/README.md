@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -44,7 +44,7 @@ React hooks: `useConsent`, `useConsentCategory`, `useConsentService`, `useGeoDet
 Complete configuration API with all options, callbacks, and advanced settings.
 
 ### [Styling](./styling.md)
-CSS variables, theme customization, and styling examples.
+CSS variables, popup theme presets (`corporate`, `minimal`, `high-contrast`), and styling examples.
 
 ### [Internationalization (i18n)](./i18n.md)
 10 built-in languages and custom translation support.
@@ -75,7 +75,7 @@ Category-level and service-level consent controls.
 Detect undeclared cookies for compliance auditing.
 
 ### [Audit Logging](./audit-logging.md)
-Cryptographically verified consent records.
+Hash-verified, tamper-evident consent records.
 
 ### [CDN Detection](./cdn-detection.md)
 Automatic detection of third-party CDN scripts.

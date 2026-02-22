@@ -114,6 +114,16 @@ describe('lawDeterminer', () => {
       const geo: GeoResult = { country: 'XX', source: 'api' };
       expect(determineLaw(geo)).toBe('none');
     });
+
+    it('should match by region code when country does not directly match', () => {
+      const geo: GeoResult = {
+        country: 'ZZ',
+        region: 'US-CA',
+        source: 'api',
+      };
+
+      expect(determineLaw(geo)).toBe('ccpa');
+    });
   });
 
   describe('getUSStateLaw', () => {
@@ -211,6 +221,11 @@ describe('lawDeterminer', () => {
 
       expect(config.consentModel).toBe('opt-out');
       expect(config.requiresExplicitConsent).toBe(false);
+    });
+
+    it('should fallback to none config for invalid law keys', () => {
+      const config = getLawConfig('unknown-law' as never);
+      expect(config.type).toBe('none');
     });
   });
 
@@ -356,6 +371,11 @@ describe('lawDeterminer', () => {
       const name = getLawName('none');
       expect(name.en).toBe('No specific law');
       expect(name.es).toBe('Sin ley especifica');
+    });
+
+    it('should fallback to default name for invalid law keys', () => {
+      const name = getLawName('mystery-law' as never);
+      expect(name.en).toBe('No specific law');
     });
 
     it('should return correct name for new US state laws', () => {

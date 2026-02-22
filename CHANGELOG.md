@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [0.9.2] - 2026-02-22
+
+### Added
+- Popup theme preset helpers (`corporate`, `minimal`, `high-contrast`) with aliases for faster UI setup.
+- Demo configurator support for popup presets and updated docs examples.
+
+### Fixed
+- Demo Vite config now deduplicates `react` and `react-dom` when using local `file:../..` dependency links.
+- Documentation alignment for current geo-detection API and stale references.
+
 ## [0.9.1] - 2025-12-01
 
 ### Fixed

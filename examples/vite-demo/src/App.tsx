@@ -1,6 +1,6 @@
 /**
  * react-consent-shield - Vite Demo
- * @version 0.9.0
+ * @version 0.9.2
  * @author 686f6c61
  * @license MIT
  * @repository https://github.com/686f6c61/react-consent-shield
@@ -16,6 +16,7 @@ import {
   ConsentScript,
   useConsent,
   useGeoDetection,
+  getPopupThemePreset,
   // Privacy signals
   isDoNotTrackEnabled,
   isGlobalPrivacyControlEnabled,
@@ -79,6 +80,7 @@ import {
   type LocaleDetection,
   type StorageType,
   type AgeVerificationMethod,
+  type PopupThemePresetId,
 } from 'react-consent-shield';
 import {
   SERVICE_COOKIES,
@@ -591,6 +593,8 @@ function DemoContent({
   setPosition,
   theme,
   setTheme,
+  popupThemePreset,
+  setPopupThemePreset,
   forceLaw,
   handleLawChange,
   geoFallback,
@@ -626,6 +630,8 @@ function DemoContent({
   setPosition: (v: BannerPosition) => void;
   theme: Theme;
   setTheme: (v: Theme) => void;
+  popupThemePreset: PopupThemePresetId | '';
+  setPopupThemePreset: (v: PopupThemePresetId | '') => void;
   forceLaw: string;
   handleLawChange: (v: string) => void;
   geoFallback: GeoFallbackStrategy;
@@ -686,6 +692,8 @@ function DemoContent({
   const [docsTab, setDocsTab] = useState<DocsTab>('quickstart');
   const [showDocsModal, setShowDocsModal] = useState(false);
   const logs = getConsentLogs();
+  const activePopupThemePreset = popupThemePreset ? getPopupThemePreset(popupThemePreset) : null;
+  const effectiveBannerVariant = activePopupThemePreset?.banner.variant ?? bannerVariant;
 
   // Refresh active cookies
   const refreshCookies = useCallback(() => {
@@ -771,7 +779,7 @@ function DemoContent({
         <div className="demo-header-content">
           <h1>react-consent-shield</h1>
           <p className="demo-subtitle">
-            GDPR, CCPA, LGPD and 35+ privacy laws compliant consent management with 274 service presets
+            GDPR, CCPA, LGPD and 52 privacy laws compliant consent management with 274 service presets
           </p>
           <div className="demo-links">
             <button
@@ -829,12 +837,41 @@ function DemoContent({
           <div className="demo-config-grid">
             <div className="demo-config-item">
               <label>
+                Popup Theme Preset
+                <InfoPopup text="Apply a ready-to-use style pack. Presets configure theme, banner variant, and position for faster setup." />
+              </label>
+              <select
+                value={popupThemePreset}
+                onChange={(e) => {
+                  const nextPreset = e.target.value as PopupThemePresetId | '';
+                  setPopupThemePreset(nextPreset);
+
+                  if (nextPreset) {
+                    const preset = getPopupThemePreset(nextPreset);
+                    setPosition(preset.provider.position || 'bottom');
+                    setTheme(preset.provider.theme || 'auto');
+                    setBannerVariant(preset.banner.variant || 'default');
+                  }
+
+                  handleConfigChange();
+                }}
+              >
+                <option value="">Custom (manual)</option>
+                <option value="corporate">Corporate</option>
+                <option value="minimal">Minimal</option>
+                <option value="high-contrast">High Contrast</option>
+              </select>
+            </div>
+
+            <div className="demo-config-item">
+              <label>
                 Position
                 <InfoPopup text="Where the consent banner appears on the screen. Bottom is recommended for less intrusive UX." />
               </label>
               <select
                 value={position}
                 onChange={(e) => {
+                  setPopupThemePreset('');
                   setPosition(e.target.value as BannerPosition);
                   handleConfigChange();
                 }}
@@ -855,6 +892,7 @@ function DemoContent({
               <select
                 value={theme}
                 onChange={(e) => {
+                  setPopupThemePreset('');
                   setTheme(e.target.value as Theme);
                   handleConfigChange();
                 }}
@@ -874,6 +912,7 @@ function DemoContent({
               <select
                 value={bannerVariant}
                 onChange={(e) => {
+                  setPopupThemePreset('');
                   setBannerVariant(e.target.value as BannerVariant);
                   handleConfigChange();
                 }}
@@ -1493,9 +1532,9 @@ function DemoContent({
 
         {/* i18n Demo */}
         <section className="demo-section" id="i18n">
-          <h2>Internationalization <InfoPopup text="All 6 supported languages with their translations. The library auto-detects user language from browser settings or can be set manually. Easily extendable with custom translations." /></h2>
+          <h2>Internationalization <InfoPopup text="All 10 supported languages with their translations. The library auto-detects user language from browser settings or can be set manually. Easily extendable with custom translations." /></h2>
           <p className="demo-description">
-            Built-in translations for 6 languages. Current: <strong>{locale.toUpperCase()}</strong>
+            Built-in translations for 10 languages. Current: <strong>{locale.toUpperCase()}</strong>
           </p>
           <div className="demo-i18n">
             <table className="demo-table">
@@ -1581,6 +1620,17 @@ function DemoContent({
             </div>
 
             <div className="demo-feature-card">
+              <h3>Popup Theme Presets</h3>
+              <p>Apply `corporate`, `minimal`, or `high-contrast` presets with one helper.</p>
+              <pre className="demo-code">{`const uiPreset = getPopupThemePreset('corporate');
+
+<ConsentProvider config={{ ...uiPreset.provider }}>
+  <ConsentBanner {...uiPreset.banner} />
+  <ConsentModal {...uiPreset.modal} />
+</ConsentProvider>`}</pre>
+            </div>
+
+            <div className="demo-feature-card">
               <h3>Age Verification</h3>
               <p>COPPA/GDPR-K compliance with configurable age gates. Supports checkbox, birthdate, year input, and full age-gate methods.</p>
               <pre className="demo-code">{`ageVerification: {
@@ -1629,14 +1679,14 @@ respectGlobalPrivacyControl: true`}</pre>
       {/* Footer */}
       <footer className="demo-footer">
         <p>
-          react-consent-shield v1.0.9 | PolyForm Noncommercial | by 686f6c61
+          react-consent-shield v0.9.2 | PolyForm Noncommercial | by 686f6c61
         </p>
         <p>
-          <span style={{ color: '#333333', fontWeight: 'bold' }}>259 Tests Passing</span>
+          <span style={{ color: '#333333', fontWeight: 'bold' }}>435 Tests Passing</span>
           {' | '}
           <span>100+ CDN Providers</span>
           {' | '}
-          <span>50+ Privacy Laws</span>
+          <span>52 Privacy Laws</span>
         </p>
         <p>
           <a href="https://www.npmjs.com/package/react-consent-shield" target="_blank" rel="noopener noreferrer">
@@ -1780,12 +1830,17 @@ respectGlobalPrivacyControl: true`}</pre>
 
       <ConsentBanner
         showCookieCount={showCookieCount}
-        variant={bannerVariant}
+        variant={effectiveBannerVariant}
+        style={activePopupThemePreset?.banner.style}
         blockInteraction={blockInteraction}
-        imageUrl={bannerVariant === 'card' ? '/6115107.png' : undefined}
+        imageUrl={effectiveBannerVariant === 'card' ? '/6115107.png' : undefined}
         imageAlt="Cookie consent illustration"
       />
-      <ConsentModal allowServiceSelection={allowServiceSelection} />
+      <ConsentModal
+        allowServiceSelection={allowServiceSelection}
+        theme={activePopupThemePreset?.modal.theme}
+        style={activePopupThemePreset?.modal.style}
+      />
     </div>
   );
 }
@@ -1819,7 +1874,7 @@ const LOCALE_DETECTION_MODES: { value: LocaleDetection; label: string; descripti
   { value: 'manual', label: 'Manual', description: 'Use only the configured default locale' },
 ];
 
-// All 35+ privacy laws for testing
+// All supported privacy laws for testing (52 total)
 const PRIVACY_LAWS = [
   // Auto-detect
   { value: '', label: 'Auto-detect', region: '', group: 'Auto' },
@@ -1880,6 +1935,7 @@ function App() {
   const [forceRegion, setForceRegion] = useState('');
   const [showCookieCount, setShowCookieCount] = useState(true);
   const [bannerVariant, setBannerVariant] = useState<BannerVariant>('default');
+  const [popupThemePreset, setPopupThemePreset] = useState<PopupThemePresetId | ''>('');
   const [blockInteraction, setBlockInteraction] = useState(true);
   const [geoFallback, setGeoFallback] = useState<GeoFallbackStrategy>('none');
   const [localeDetection, setLocaleDetection] = useState<LocaleDetection>('auto');
@@ -1893,6 +1949,10 @@ function App() {
   const [ageVerificationEnabled, setAgeVerificationEnabled] = useState(false);
   const [ageVerificationMethod, setAgeVerificationMethod] = useState<AgeVerificationMethod>('checkbox');
   const [minimumAge, setMinimumAge] = useState(16);
+  const activePopupThemePreset = popupThemePreset ? getPopupThemePreset(popupThemePreset) : null;
+  const effectivePosition = activePopupThemePreset?.provider.position ?? position;
+  const effectiveTheme = activePopupThemePreset?.provider.theme ?? theme;
+  const effectiveBannerVariant = activePopupThemePreset?.banner.variant ?? bannerVariant;
 
   const handleConfigChange = () => {
     setKey((k) => k + 1);
@@ -1911,8 +1971,8 @@ function App() {
         key={key}
         config={{
           services: allServices,
-          position,
-          theme,
+          position: effectivePosition,
+          theme: effectiveTheme,
           defaultLocale: locale,
           forceLaw: forceLaw ? (forceLaw as any) : undefined,
           forceRegion: forceRegion || undefined,
@@ -1925,7 +1985,7 @@ function App() {
           },
           // New features
           previewMode,
-          previewVariant: previewMode ? bannerVariant : undefined,
+          previewVariant: previewMode ? effectiveBannerVariant : undefined,
           storageType,
           respectDoNotTrack: respectDNT,
           respectGlobalPrivacyControl: respectGPC,
@@ -1959,6 +2019,8 @@ function App() {
           setPosition={setPosition}
           theme={theme}
           setTheme={setTheme}
+          popupThemePreset={popupThemePreset}
+          setPopupThemePreset={setPopupThemePreset}
           forceLaw={forceLaw}
           handleLawChange={handleLawChange}
           geoFallback={geoFallback}

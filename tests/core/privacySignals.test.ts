@@ -170,4 +170,24 @@ describe('privacySignals', () => {
       });
     });
   });
+
+  describe('server guards', () => {
+    it('should return false values when window is unavailable', async () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal('window', undefined);
+      vi.resetModules();
+
+      const module = await import('../../src/core/privacySignals');
+      expect(module.isDoNotTrackEnabled()).toBe(false);
+      expect(module.isGlobalPrivacyControlEnabled()).toBe(false);
+      expect(module.isAnyPrivacySignalEnabled()).toBe(false);
+      expect(module.getPrivacySignalStatus()).toEqual({
+        doNotTrack: false,
+        globalPrivacyControl: false,
+      });
+
+      vi.stubGlobal('window', originalWindow);
+      vi.resetModules();
+    });
+  });
 });

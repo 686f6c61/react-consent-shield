@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -306,7 +306,7 @@ function FullComplianceReport() {
 
 ## Report Hash Verification
 
-Each report includes a cryptographic hash for integrity verification:
+Each report includes a deterministic hash for integrity verification (tamper-evident):
 
 ```typescript
 // The hash is generated from the report content

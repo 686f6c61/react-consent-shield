@@ -5,8 +5,8 @@
  * @license PolyForm - see LICENSE
  * @repository https://github.com/686f6c61/react-consent-shield
  *
- * Audit logging system for consent records with hash verification.
- * Provides tamper-proof logging for GDPR/CCPA compliance documentation.
+ * Audit logging system for consent records with checksum verification.
+ * Provides client-side tamper-evident checks for compliance documentation.
  */
 
 import type {
@@ -20,7 +20,7 @@ import { LOGS_STORAGE_KEY } from '../constants';
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Generate a simple hash for verification
+// Generate a deterministic checksum for verification (non-cryptographic)
 export function generateHash(data: string): string {
   let hash = 0;
   for (let i = 0; i < data.length; i++) {

@@ -34,13 +34,13 @@ export function ConfigurationDocs() {
               <td><code>theme</code></td>
               <td><code>string</code></td>
               <td><code>'auto'</code></td>
-              <td>Theme: light, dark, or auto (follows system)</td>
+              <td>Theme: light, dark, auto, or high-contrast</td>
             </tr>
             <tr>
               <td><code>defaultLocale</code></td>
               <td><code>string</code></td>
               <td><code>'en'</code></td>
-              <td>Default language: en, es, fr, de, it, pt</td>
+              <td>Default language (10 built-in locales: en, es, fr, de, it, pt, nl, pl, ja, zh)</td>
             </tr>
             <tr>
               <td><code>privacyPolicyUrl</code></td>
@@ -50,21 +50,21 @@ export function ConfigurationDocs() {
             </tr>
             <tr>
               <td><code>geoDetection</code></td>
-              <td><code>object</code></td>
-              <td><code>{'{}'}</code></td>
-              <td>Geo detection settings (enabled, method, fallback)</td>
+              <td><code>string</code></td>
+              <td><code>'headers'</code></td>
+              <td>Geo method: headers, api, or manual</td>
             </tr>
             <tr>
               <td><code>storageType</code></td>
               <td><code>string</code></td>
-              <td><code>'localStorage'</code></td>
+              <td><code>'both'</code></td>
               <td>Storage type: localStorage, sessionStorage, cookie, or both</td>
             </tr>
             <tr>
               <td><code>reconsentPolicy</code></td>
               <td><code>string</code></td>
-              <td><code>'never'</code></td>
-              <td>When to ask again: never, service-change, time-based</td>
+              <td><code>'gdpr'</code></td>
+              <td>Re-consent strategy: gdpr, ccpa, lgpd, strict, custom</td>
             </tr>
             <tr>
               <td><code>respectDoNotTrack</code></td>
@@ -167,16 +167,27 @@ export function ConfigurationDocs() {
         <pre className="demo-code">{`<ConsentProvider
   config={{
     services: [...],
-    geoDetection: {
-      enabled: true,
-      method: 'api',           // 'api' | 'headers' | 'timezone'
-      fallback: 'strictest',   // 'strictest' | 'permissive' | 'showWarning'
-      fallbackRegion: 'EU',    // Used when fallback is 'region'
-    },
+    geoDetection: 'headers',        // 'headers' | 'api' | 'manual'
+    geoFallback: 'strictest',       // 'none' | 'strictest' | 'permissive' | 'region' | 'showWarning'
+    geoFallbackRegion: 'ES',        // Used when geoFallback is 'region'
   }}
 >
   ...
 </ConsentProvider>`}</pre>
+      </div>
+
+      <div className="demo-docs-section">
+        <h3>Popup theme presets</h3>
+        <p>Apply ready-to-use popup styles for banner and modal in one step.</p>
+        <pre className="demo-code">{`import { getPopupThemePreset } from 'react-consent-shield';
+
+const uiPreset = getPopupThemePreset('corporate');
+
+<ConsentProvider config={{ ...uiPreset.provider }}>
+  <ConsentBanner {...uiPreset.banner} />
+  <ConsentModal {...uiPreset.modal} />
+</ConsentProvider>`}</pre>
+        <p>Available presets: <code>corporate</code>, <code>minimal</code>, <code>high-contrast</code>.</p>
       </div>
 
       <div className="demo-docs-section">

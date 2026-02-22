@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -91,7 +91,7 @@ When loading react-consent-shield from a CDN, you can optionally enable SRI to v
 
 ```html
 <script
-  src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"
+  src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"
   integrity="sha384-YOUR_HASH_HERE"
   crossorigin="anonymous"
 ></script>
@@ -100,14 +100,14 @@ When loading react-consent-shield from a CDN, you can optionally enable SRI to v
 ### Without SRI (simpler setup)
 
 ```html
-<script src="https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js"></script>
+<script src="https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js"></script>
 ```
 
 ### Generating SRI hash
 
 ```bash
 # Download and generate hash
-curl -s https://unpkg.com/react-consent-shield@1.0.9/dist/index.umd.js | \
+curl -s https://unpkg.com/react-consent-shield@<VERSION>/dist/index.umd.js | \
   openssl dgst -sha384 -binary | \
   openssl base64 -A
 
@@ -172,10 +172,8 @@ Content-Security-Policy:
 ```tsx
 <ConsentProvider
   config={{
-    geoDetection: {
-      enabled: false,
-      forceRegion: 'DE', // Set manually or server-side
-    },
+    geoDetection: 'manual',
+    forceRegion: 'DE', // Set manually or server-side
   }}
 >
 ```
@@ -216,7 +214,7 @@ import {
 } from 'react-consent-shield';
 
 const status = getPrivacySignalStatus();
-// { dnt: boolean, gpc: boolean, any: boolean }
+// { doNotTrack: boolean, globalPrivacyControl: boolean }
 ```
 
 See [Configuration - Privacy Signals](./configuration.md#privacy-signals-dnt--gpc) for complete documentation.

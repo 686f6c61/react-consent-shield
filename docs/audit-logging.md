@@ -1,6 +1,6 @@
 <!--
   react-consent-shield
-  @version 0.9.0
+  @version 0.9.2
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
@@ -9,7 +9,7 @@
 
 # Audit Logging
 
-For compliance purposes, you may need to maintain records of all consent actions. The library can maintain an audit log of every consent decision with cryptographic verification.
+For compliance purposes, you may need to maintain records of all consent actions. The library can maintain an audit log of every consent decision with hash verification (tamper-evident).
 
 ## What's Logged
 
@@ -78,7 +78,6 @@ console.log(`Valid entries: ${result.valid}, Invalid entries: ${result.invalid}`
 
 ```typescript
 interface ConsentLogEntry {
-  id: string;
   timestamp: string;
   action: 'initial' | 'update' | 'withdraw' | 'reconsent';
   categories: {
