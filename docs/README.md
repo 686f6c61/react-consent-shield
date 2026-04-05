@@ -4,7 +4,7 @@
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
-  @demo https://react-consent-shield.onrender.com
+  @demo https://react-consent-shield.686f6c61.dev
 -->
 
 # React Consent Kit Documentation
@@ -116,7 +116,7 @@ Comprehensive overview of global privacy laws and how React Consent Kit helps yo
 ## Support
 
 - **Issues**: [Report bugs on GitHub](https://github.com/686f6c61/react-consent-shield/issues)
-- **Demo**: [Live interactive demo](https://react-consent-shield.onrender.com)
+- **Demo**: [Live interactive demo](https://react-consent-shield.686f6c61.dev)
 - **Examples**: Check `/examples` for Next.js and Vite implementations
 
 ---

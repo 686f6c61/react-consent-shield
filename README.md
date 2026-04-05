@@ -18,7 +18,7 @@ Includes automatic geo-detection for 52 privacy laws worldwide (GDPR, CCPA, LGPD
 
 **Current release:** `v0.9.2`
 
-**Live demo:** [react-consent-shield.onrender.com](https://react-consent-shield.onrender.com)
+**Live demo:** [react-consent-shield.686f6c61.dev](https://react-consent-shield.686f6c61.dev)
 
 **npm:** [npmjs.com/package/react-consent-shield](https://www.npmjs.com/package/react-consent-shield)
 
@@ -244,23 +244,23 @@ For detailed documentation, see the [docs folder](./docs/):
 | Topic | Description | View online |
 |-------|-------------|-------------|
 | [Getting Started](./docs/getting-started.md) | Installation and basic setup | - |
-| [Configuration](./docs/configuration.md) | All provider, banner, and modal options | [View online](https://react-consent-shield.onrender.com#banner-configuration) |
-| [Components](./docs/components.md) | ConsentProvider, ConsentBanner, ConsentModal, ConsentScript | [View online](https://react-consent-shield.onrender.com#control-panel) |
-| [Hooks](./docs/hooks.md) | useConsent, useConsentCategory, useConsentService, useGeoDetection | [View online](https://react-consent-shield.onrender.com#consent-status) |
-| [Service Presets](./docs/service-presets.md) | 274 pre-configured services and how to create custom ones | [View online](https://react-consent-shield.onrender.com#granular-consent) |
-| [Script Blocking](./docs/script-blocking.md) | Block scripts until consent is given | [View online](https://react-consent-shield.onrender.com#script-blocking) |
-| [Granular Consent](./docs/granular-consent.md) | Category-level and service-level consent | [View online](https://react-consent-shield.onrender.com#granular-consent) |
-| [Google Consent Mode](./docs/google-consent-mode.md) | Integration with Google Consent Mode v2 | [View online](https://react-consent-shield.onrender.com#google-consent-mode) |
-| [Geographic Detection](./docs/geo-detection.md) | Automatic law detection and 52 supported laws | [View online](https://react-consent-shield.onrender.com#geo-detection) |
-| [Cookie Scanner](./docs/cookie-scanner.md) | Detect undeclared cookies for compliance | [View online](https://react-consent-shield.onrender.com#cookie-scanner) |
-| [Audit Logging](./docs/audit-logging.md) | Hash-verified, tamper-evident consent records | [View online](https://react-consent-shield.onrender.com#audit-logs) |
-| [Compliance Report](./docs/compliance-report.md) | Generate technical reports for privacy audits | [View online](https://react-consent-shield.onrender.com#compliance-report) |
-| [Consent Versioning](./docs/consent-versioning.md) | Auto-detect service changes and re-consent | [View online](https://react-consent-shield.onrender.com#consent-versioning) |
-| [Subdomain Sharing](./docs/subdomain-sharing.md) | Share consent across subdomains | [View online](https://react-consent-shield.onrender.com#subdomain-sharing) |
-| [Internationalization](./docs/i18n.md) | 10 languages and custom translations | [View online](https://react-consent-shield.onrender.com#i18n) |
-| [Accessibility](./docs/accessibility.md) | WCAG 2.2 AA compliance and keyboard navigation | [View online](https://react-consent-shield.onrender.com#banner-configuration) |
+| [Configuration](./docs/configuration.md) | All provider, banner, and modal options | [View online](https://react-consent-shield.686f6c61.dev#banner-configuration) |
+| [Components](./docs/components.md) | ConsentProvider, ConsentBanner, ConsentModal, ConsentScript | [View online](https://react-consent-shield.686f6c61.dev#control-panel) |
+| [Hooks](./docs/hooks.md) | useConsent, useConsentCategory, useConsentService, useGeoDetection | [View online](https://react-consent-shield.686f6c61.dev#consent-status) |
+| [Service Presets](./docs/service-presets.md) | 274 pre-configured services and how to create custom ones | [View online](https://react-consent-shield.686f6c61.dev#granular-consent) |
+| [Script Blocking](./docs/script-blocking.md) | Block scripts until consent is given | [View online](https://react-consent-shield.686f6c61.dev#script-blocking) |
+| [Granular Consent](./docs/granular-consent.md) | Category-level and service-level consent | [View online](https://react-consent-shield.686f6c61.dev#granular-consent) |
+| [Google Consent Mode](./docs/google-consent-mode.md) | Integration with Google Consent Mode v2 | [View online](https://react-consent-shield.686f6c61.dev#google-consent-mode) |
+| [Geographic Detection](./docs/geo-detection.md) | Automatic law detection and 52 supported laws | [View online](https://react-consent-shield.686f6c61.dev#geo-detection) |
+| [Cookie Scanner](./docs/cookie-scanner.md) | Detect undeclared cookies for compliance | [View online](https://react-consent-shield.686f6c61.dev#cookie-scanner) |
+| [Audit Logging](./docs/audit-logging.md) | Hash-verified, tamper-evident consent records | [View online](https://react-consent-shield.686f6c61.dev#audit-logs) |
+| [Compliance Report](./docs/compliance-report.md) | Generate technical reports for privacy audits | [View online](https://react-consent-shield.686f6c61.dev#compliance-report) |
+| [Consent Versioning](./docs/consent-versioning.md) | Auto-detect service changes and re-consent | [View online](https://react-consent-shield.686f6c61.dev#consent-versioning) |
+| [Subdomain Sharing](./docs/subdomain-sharing.md) | Share consent across subdomains | [View online](https://react-consent-shield.686f6c61.dev#subdomain-sharing) |
+| [Internationalization](./docs/i18n.md) | 10 languages and custom translations | [View online](https://react-consent-shield.686f6c61.dev#i18n) |
+| [Accessibility](./docs/accessibility.md) | WCAG 2.2 AA compliance and keyboard navigation | [View online](https://react-consent-shield.686f6c61.dev#banner-configuration) |
 | [Troubleshooting](./docs/troubleshooting.md) | Common issues and FAQ | - |
-| [Styling](./docs/styling.md) | CSS variables and customization examples | [View online](https://react-consent-shield.onrender.com#banner-configuration) |
+| [Styling](./docs/styling.md) | CSS variables and customization examples | [View online](https://react-consent-shield.686f6c61.dev#banner-configuration) |
 | [Framework Integration](./docs/frameworks.md) | Next.js, Vite, plain HTML examples | - |
 
 ---
@@ -269,20 +269,20 @@ For detailed documentation, see the [docs folder](./docs/):
 
 The live demo lets you experiment with all features without writing any code. You can change banner positions, switch themes, simulate different geographic locations, and see how consent signals are sent to Google. All changes happen in real-time so you can quickly find the configuration that works for your project.
 
-Try the **[live demo](https://react-consent-shield.onrender.com)**:
+Try the **[live demo](https://react-consent-shield.686f6c61.dev)**:
 
 | Section | What you can try |
 |---------|------------------|
-| [Banner Configuration](https://react-consent-shield.onrender.com#banner-configuration) | Position, theme, variants, blocking mode |
-| [Geographic Detection](https://react-consent-shield.onrender.com#geo-detection) | Auto-detect location and applicable law |
-| [Consent Status](https://react-consent-shield.onrender.com#consent-status) | View current consent state per category |
-| [Granular Consent](https://react-consent-shield.onrender.com#granular-consent) | Toggle individual services with cookie simulation |
-| [Cookie Scanner](https://react-consent-shield.onrender.com#cookie-scanner) | Detect undeclared cookies |
-| [Google Consent Mode](https://react-consent-shield.onrender.com#google-consent-mode) | See consent signals sent to Google |
-| [Script Blocking](https://react-consent-shield.onrender.com#script-blocking) | Conditional script loading demo |
-| [Audit Logs](https://react-consent-shield.onrender.com#audit-logs) | Consent history with hash verification |
-| [Compliance Report](https://react-consent-shield.onrender.com#compliance-report) | Generate technical implementation reports |
-| [i18n](https://react-consent-shield.onrender.com#i18n) | Switch between 10 languages |
+| [Banner Configuration](https://react-consent-shield.686f6c61.dev#banner-configuration) | Position, theme, variants, blocking mode |
+| [Geographic Detection](https://react-consent-shield.686f6c61.dev#geo-detection) | Auto-detect location and applicable law |
+| [Consent Status](https://react-consent-shield.686f6c61.dev#consent-status) | View current consent state per category |
+| [Granular Consent](https://react-consent-shield.686f6c61.dev#granular-consent) | Toggle individual services with cookie simulation |
+| [Cookie Scanner](https://react-consent-shield.686f6c61.dev#cookie-scanner) | Detect undeclared cookies |
+| [Google Consent Mode](https://react-consent-shield.686f6c61.dev#google-consent-mode) | See consent signals sent to Google |
+| [Script Blocking](https://react-consent-shield.686f6c61.dev#script-blocking) | Conditional script loading demo |
+| [Audit Logs](https://react-consent-shield.686f6c61.dev#audit-logs) | Consent history with hash verification |
+| [Compliance Report](https://react-consent-shield.686f6c61.dev#compliance-report) | Generate technical implementation reports |
+| [i18n](https://react-consent-shield.686f6c61.dev#i18n) | Switch between 10 languages |
 
 ---
 

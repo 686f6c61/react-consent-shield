@@ -4,7 +4,7 @@
   @author 686f6c61
   @license PolyForm Noncommercial 1.0.0
   @repository https://github.com/686f6c61/react-consent-shield
-  @demo https://react-consent-shield.onrender.com
+  @demo https://react-consent-shield.686f6c61.dev
 -->
 
 # Performance Optimization Guide
