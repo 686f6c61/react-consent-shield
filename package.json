@@ -71,7 +71,7 @@
   "bugs": {
     "url": "https://github.com/686f6c61/react-consent-shield/issues"
   },
-  "homepage": "https://react-consent-shield.onrender.com",
+  "homepage": "https://react-consent-shield.686f6c61.dev",
   "engines": {
     "node": ">=18.0.0"
   }
