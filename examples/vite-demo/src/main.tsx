@@ -13,18 +13,23 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Inicializa GlitchTip (Sentry-compatible) para reportar errores en runtime.
-// La DSN es publica por diseno y se puede commitear sin riesgo.
-Sentry.init({
-  dsn: 'https://40b4a28ed91b42ea82ae2a3ea35fb30a@glitchtip.686f6c61.dev/15',
-  release: 'react-consent-shield@vite-demo',
-  environment: import.meta.env.MODE,
-  tracesSampleRate: 0.01,
-});
+// Inicializa GlitchTip (compatible con la API de Sentry) leyendo la DSN
+// de VITE_GLITCHTIP_DSN, inyectada en build time desde el entorno de
+// Coolify (ver Dockerfile para los ARG).
+const dsn = import.meta.env.VITE_GLITCHTIP_DSN;
 
-// Aviso silencioso al backend de que el demo arranco. Sirve para verificar
-// la integracion con GlitchTip sin esperar a que ocurra un error real.
-Sentry.captureMessage('vite-demo loaded', 'info');
+if (dsn) {
+  Sentry.init({
+    dsn,
+    release: 'react-consent-shield@vite-demo',
+    environment: import.meta.env.MODE,
+    tracesSampleRate: 0.01,
+  });
+
+  // Aviso silencioso al backend de que el demo arranco. Sirve para verificar
+  // la integracion con GlitchTip sin esperar a que ocurra un error real.
+  Sentry.captureMessage('vite-demo loaded', 'info');
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

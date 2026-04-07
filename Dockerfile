@@ -1,5 +1,12 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+
+# Build-time secrets / public identifiers (DSN de GlitchTip, etc.).
+# Se reciben desde Coolify como build args y se exportan al entorno
+# para que Vite los inline en el bundle estatico del demo.
+ARG VITE_GLITCHTIP_DSN
+ENV VITE_GLITCHTIP_DSN=$VITE_GLITCHTIP_DSN
+
 COPY . .
 RUN npm install
 RUN npm run build
